@@ -89,12 +89,12 @@ const generateRandomCrash = () => {
   if (thisRound.crashed) {
     // Example usage:
     const min = 1.0;
-    const max = 2.0;
+    const max = 10.0;
     const decimalPlaces = 2;
     const randomNumber = getRandomNumber(min, max, decimalPlaces);
 
     thisRound.crashed = false;
-    broadcast({ type: "crashed", crashed: thisRound.crashed });
+    // broadcast({ type: "crashed", crashed: thisRound.crashed });
     // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
     thisRound.crash = randomNumber;
   }
@@ -113,7 +113,11 @@ const crashRunner = () => {
     thisRound.crashed = true;
     speed.use = "0.01";
     speed.logic = 1;
-    broadcast({ type: "crashed", crashed: thisRound.crashed });
+    broadcast({
+      type: "crashed",
+      crashed: thisRound.crashed,
+      crash: thisRound.crash,
+    });
     // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
     clearInterval(streamCrash);
     streamTimerF();
@@ -181,7 +185,7 @@ const streamTimerF = () => {
       crashNumber = new Decimal("0.99");
       generateRandomCrash();
     }
-  }, 1000);
+  }, 900);
 };
 
 streamCrashF(); //initial start
