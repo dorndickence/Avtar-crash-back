@@ -126,7 +126,7 @@ module.exports = {
     try {
       if (req.body.token === undefined) {
         res.status(400).send({
-          message: "Token is required",
+          message: "Login to your account",
           success: false,
           data: {},
         });
@@ -300,9 +300,10 @@ module.exports = {
         { $inc: { balance: winAmount } }
       );
       await round.updateOne(
-        { privateUsername: getUser[0].privateUsername },
+        { hash: game.thisRound.hash },
         { $set: { odds: cashoutOdds, win: winAmount } }
       );
+
       game.broadcast({
         type: "winData",
         _id: getRound[0]._id,
