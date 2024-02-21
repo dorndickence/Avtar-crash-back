@@ -9,6 +9,7 @@ const { mongoose } = require("mongoose");
 const game = require("./game/gameFunction");
 const user = require("./users/user");
 const app = express();
+const livebet = require("./users/livebet");
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -38,6 +39,15 @@ app.post("/login", (req, res) => {
   // console.log(req);
   user.login(req, res);
 });
+app.post("/bet", (req, res) => {
+  user.bet(req, res);
+});
+app.post("/cashout", (req, res) => {
+  user.cashout(req, res);
+});
+app.post("/betlive", (req, res) => {
+  livebet.getlivebet(req, res);
+});
 
 io.on("connection", (socket) => {
   game.clients.add(socket);
@@ -54,7 +64,7 @@ io.on("error", (error) => {
   console.error("Socket.io error:", error);
 });
 
-// game.streamCrashF(); //initial start
+game.streamCrashF(); //initial start
 server.listen(3001, () => {
   console.log("Server is running on port 3000");
 });

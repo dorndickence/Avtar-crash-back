@@ -2,6 +2,8 @@ const { Decimal } = require("decimal.js");
 const CryptoJS = require("crypto-js");
 const WebSocket = require("ws");
 
+const round = require("../model/round");
+
 module.exports = {
   broadcast: function (message) {
     message = this.encrypt(message); // Use this.encrypt() to reference the encrypt function
@@ -60,18 +62,29 @@ module.exports = {
     // console.log(this.crashNumber);
     // io.emit("crash", encrypt({ crash: crashNumber }));
   },
+  updateDataRound: async function () {
+    await round.updateMany(
+      { hash: this.thisRound.hash }, // Filter condition
+      { $set: { crash: this.thisRound.crash } } // Update operation
+    );
+  },
   crashRunner: function () {
     if (this.thisRound.crash <= this.crashNumber) {
       this.thisRound.crashed = true;
       this.speed.use = "0.01";
       this.speed.logic = 1;
+      this.thisRound.hash = this.encrypt(this.thisRound.crash);
       this.broadcast({
         type: "crashed",
         crashed: this.thisRound.crashed,
         crash: this.thisRound.crash,
       });
       // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
+
       clearInterval(this.streamCrash);
+
+      this.updateDataRound();
+
       this.streamTimerF();
     } else {
       if (this.crashNumber > 1.1 && this.speed.logic === 1) {
@@ -125,12 +138,15 @@ module.exports = {
   },
   streamTimerF: function () {
     let timer = -1;
+    this.betTime = true;
     this.streamTimer = setInterval(() => {
       timer++;
       this.broadcast({ type: "timer", timer: timer });
+      // this.broadcast({ type: "betData", betData: this.betData });
       // io.emit("timer", encrypt({ timer: timer }));
       if (timer >= 11) {
         clearInterval(this.streamTimer);
+        this.betTime = false;
         this.streamCrashF();
         this.crashNumber = new Decimal("0.99");
         this.generateRandomCrash();
@@ -140,6 +156,7 @@ module.exports = {
   thisRound: {
     crash: 0,
     crashed: false,
+    hash: null,
   },
   clients: new Set(),
   crashNumber: new Decimal("0.99"),
@@ -149,4 +166,5 @@ module.exports = {
     use: "0.01",
     logic: 1,
   },
+  betTime: false,
 };
