@@ -207,12 +207,18 @@ module.exports = {
       };
       const createdRound = await round.create(betData);
 
+      let timeout = 0;
+      timeout = game.timer * 1000;
+      timeout = 11000 - timeout;
+
       const sendData = {
         amount: amount,
         publicUsername: getUser[0].publicUsername,
         win: 0,
         odds: 0,
         _id: createdRound._id,
+        token: token,
+        timeout: timeout,
       };
 
       game.broadcast({ type: "betData", betData: sendData });
@@ -276,7 +282,7 @@ module.exports = {
         return;
       }
 
-      if (getRound.length < 1) {
+      if (getRound.length < 1 || parseFloat(getRound[0].win) > 0) {
         res.status(409).send({
           message: `Round finished`,
           success: false,
@@ -300,7 +306,12 @@ module.exports = {
         { $inc: { balance: winAmount } }
       );
       await round.updateOne(
-        { hash: game.thisRound.hash },
+        {
+          $and: [
+            { hash: game.thisRound.hash },
+            { privateUsername: getUser[0].privateUsername },
+          ],
+        },
         { $set: { odds: cashoutOdds, win: winAmount } }
       );
 
@@ -309,6 +320,7 @@ module.exports = {
         _id: getRound[0]._id,
         amount: winAmount,
         odds: cashoutOdds,
+        token: token,
       });
 
       res.status(200).send({

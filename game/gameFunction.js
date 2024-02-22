@@ -137,10 +137,11 @@ module.exports = {
     }, timing);
   },
   streamTimerF: function () {
-    let timer = -1;
+    let timer = this.timer;
     this.betTime = true;
     this.streamTimer = setInterval(() => {
       timer++;
+      this.timer++;
       this.broadcast({ type: "timer", timer: timer });
       // this.broadcast({ type: "betData", betData: this.betData });
       // io.emit("timer", encrypt({ timer: timer }));
@@ -148,6 +149,7 @@ module.exports = {
         clearInterval(this.streamTimer);
         this.betTime = false;
         this.streamCrashF();
+        this.timer = -1;
         this.crashNumber = new Decimal("0.99");
         this.generateRandomCrash();
       }
@@ -167,4 +169,5 @@ module.exports = {
     logic: 1,
   },
   betTime: false,
+  timer: -1,
 };
