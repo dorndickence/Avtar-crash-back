@@ -10,6 +10,7 @@ const game = require("./game/gameFunction");
 const user = require("./users/user");
 const app = express();
 const livebet = require("./users/livebet");
+const trans = require("./users/trans");
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -47,6 +48,9 @@ app.post("/cashout", (req, res) => {
 });
 app.post("/betlive", (req, res) => {
   livebet.getlivebet(req, res);
+});
+app.post("/deposit", (req, res) => {
+  trans.deposit(req, res);
 });
 
 io.on("connection", (socket) => {
