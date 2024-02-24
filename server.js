@@ -53,15 +53,36 @@ app.post("/deposit", (req, res) => {
   trans.deposit(req, res);
 });
 
-io.on("connection", (socket) => {
-  game.clients.add(socket);
+io.on("connection", async (socket, req) => {
+  // check existing connection and deactivate them
+  const userId = parseInt(req.url.split("=")[1]);
+
+  if (game.clients.has(userId)) {
+    const ExisitngSocket = game.getWebSocketByUserId(userId);
+    ExisitngSocket.close();
+    game.clients.delete(game.getUserIdByWebSocket(ExisitngSocket));
+  }
+
+  // const prevClientKey = Array.from(game.clients.keys()).pop();
+  const assignNumber = game.findMissingNumbers(Array.from(game.clients.keys()));
+
+  // let newClientKey = prevClientKey;
+  // if (prevClientKey !== undefined) {
+  //   newClientKey++;
+  // } else {
+  //   newClientKey = 0;
+  // }
+
+  game.clients.set(assignNumber, socket);
+
+  //senduserid to connected user only
+  game.broadcast({ type: "socketuserId", data: assignNumber }, socket);
+  // console.log(Array.from(game.clients.keys()));
   socket.on("close", function close() {
     // Remove the WebSocket connection from the set
-    game.clients.delete(socket);
-  });
-  socket.on("cashout", () => {
-    game.crashNumber = new Decimal("0.99");
-    console.log("Cashout Requested");
+    if (game.getUserIdByWebSocket(socket) !== null) {
+      game.clients.delete(game.getUserIdByWebSocket(socket));
+    }
   });
 });
 io.on("error", (error) => {
@@ -70,5 +91,5 @@ io.on("error", (error) => {
 
 game.streamCrashF(); //initial start
 server.listen(3001, () => {
-  console.log("Server is running on port 3000");
+  console.log("Server is running on port 3001");
 });

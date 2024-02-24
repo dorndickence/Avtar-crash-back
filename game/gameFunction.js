@@ -5,13 +5,47 @@ const WebSocket = require("ws");
 const round = require("../model/round");
 
 module.exports = {
-  broadcast: function (message) {
+  broadcast: function (message, singleSocket = null) {
     message = this.encrypt(message); // Use this.encrypt() to reference the encrypt function
-    this.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+    if (singleSocket === null) {
+      this.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      });
+    } else {
+      if (singleSocket.readyState === WebSocket.OPEN) {
+        singleSocket.send(message);
       }
-    });
+    }
+  },
+  findMissingNumbers: function (arr) {
+    let expectedNumber = 0;
+    while (true) {
+      if (
+        arr[expectedNumber] !== expectedNumber &&
+        !arr.includes(expectedNumber)
+      ) {
+        return expectedNumber;
+      }
+      expectedNumber++;
+    }
+  },
+  getUserIdByWebSocket: function (webSocket) {
+    for (const [userId, ws] of this.clients.entries()) {
+      if (ws === webSocket) {
+        return userId;
+      }
+    }
+    return null;
+  },
+  getWebSocketByUserId: function (userId) {
+    for (const [clientId, ws] of this.clients.entries()) {
+      if (clientId === userId) {
+        return ws;
+      }
+    }
+    return null;
   },
   getRandomNumber: function (min, max, decimalPlaces) {
     // Generate a random number between min and max (inclusive)
@@ -44,8 +78,8 @@ module.exports = {
   generateRandomCrash: function () {
     if (this.thisRound.crashed) {
       // Example usage:
-      const min = 1.0;
-      const max = 10.0;
+      const min = 50.0;
+      const max = 200.0;
       const decimalPlaces = 2;
       const randomNumber = this.getRandomNumber(min, max, decimalPlaces); // Use this.getRandomNumber() to reference the getRandomNumber function
 
@@ -160,7 +194,7 @@ module.exports = {
     crashed: false,
     hash: null,
   },
-  clients: new Set(),
+  clients: new Map(),
   crashNumber: new Decimal("0.99"),
   streamCrash: "",
   streamTimer: "",
