@@ -78,8 +78,8 @@ module.exports = {
   generateRandomCrash: function () {
     if (this.thisRound.crashed) {
       // Example usage:
-      const min = 50.0;
-      const max = 200.0;
+      const min = 1.0;
+      const max = 2.0;
       const decimalPlaces = 2;
       const randomNumber = this.getRandomNumber(min, max, decimalPlaces); // Use this.getRandomNumber() to reference the getRandomNumber function
 

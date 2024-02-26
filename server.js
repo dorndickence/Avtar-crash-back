@@ -11,6 +11,8 @@ const user = require("./users/user");
 const app = express();
 const livebet = require("./users/livebet");
 const trans = require("./users/trans");
+const history = require("./users/history");
+const cron = require("./users/cron");
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -51,6 +53,18 @@ app.post("/betlive", (req, res) => {
 });
 app.post("/deposit", (req, res) => {
   trans.deposit(req, res);
+});
+app.post("/withdraw", (req, res) => {
+  trans.withdraw(req, res);
+});
+app.post("/deposit-history", (req, res) => {
+  history.deposit(req, res);
+});
+app.post("/withdraw-history", (req, res) => {
+  history.withdraw(req, res);
+});
+app.get("/cron-deposit", (req, res) => {
+  cron.deposit(res);
 });
 
 io.on("connection", async (socket, req) => {

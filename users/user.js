@@ -142,7 +142,21 @@ module.exports = {
         return;
       }
 
+      if (
+        req.body.socketuserId === undefined ||
+        game.getWebSocketByUserId(parseInt(req.body.socketuserId)) === null
+      ) {
+        console.log(game.clients.keys());
+        res.status(409).send({
+          message: "Connection lost",
+          success: false,
+          data: {},
+        });
+        return;
+      }
+
       const token = req.body.token;
+      const socketuserId = parseInt(req.body.socketuserId);
       const amount = parseInt(req.body.amount);
       const getUser = await user.find({ password: token });
       const getRound = await round.find({
@@ -221,7 +235,10 @@ module.exports = {
         timeout: timeout,
       };
 
-      game.broadcast({ type: "betData", betData: sendData });
+      game.broadcast(
+        { type: "betData", betData: sendData },
+        game.getWebSocketByUserId(socketuserId)
+      );
       res.status(200).send({
         data: {},
         message: "Bet accepted",
@@ -246,9 +263,21 @@ module.exports = {
         return;
       }
 
+      if (
+        req.body.socketuserId === undefined ||
+        game.getWebSocketByUserId(parseInt(req.body.socketuserId)) === null
+      ) {
+        res.status(409).send({
+          message: "Connection lost",
+          success: false,
+          data: {},
+        });
+        return;
+      }
+
       const token = req.body.token;
       const getUser = await user.find({ password: token });
-
+      const socketuserId = parseInt(req.body.socketuserId);
       const getRound = await round.find({
         $and: [
           { hash: game.thisRound.hash },
@@ -315,13 +344,16 @@ module.exports = {
         { $set: { odds: cashoutOdds, win: winAmount } }
       );
 
-      game.broadcast({
-        type: "winData",
-        _id: getRound[0]._id,
-        amount: winAmount,
-        odds: cashoutOdds,
-        token: token,
-      });
+      game.broadcast(
+        {
+          type: "winData",
+          _id: getRound[0]._id,
+          amount: winAmount,
+          odds: cashoutOdds,
+          token: token,
+        },
+        game.getWebSocketByUserId(socketuserId)
+      );
 
       res.status(200).send({
         data: getRound,
