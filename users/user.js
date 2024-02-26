@@ -2,6 +2,45 @@ const user = require("../model/user");
 const game = require("../game/gameFunction");
 const round = require("../model/round");
 module.exports = {
+  balance: async function (req, res) {
+    try {
+      if (req.body.token === undefined) {
+        res.status(409).send({
+          data: {},
+          message: "Token is required",
+          success: false,
+        });
+        return;
+      }
+      const token = req.body.token;
+      const getUser = await user.find({ password: token });
+
+      if (getUser.length !== 1 && getUser.length !== 0) {
+        res.status(409).send({
+          message: `Multi user conflicts`,
+          success: false,
+          data: {},
+        });
+        return;
+      }
+      if (getUser.length === 0) {
+        res.status(401).send({
+          message: `Please login to withdraw`,
+          success: false,
+          data: {},
+        });
+        return;
+      }
+
+      const balance = getUser[0].balance;
+
+      res
+        .status(200)
+        .send({ data: balance, message: "success", success: true });
+    } catch (error) {
+      console.log(error);
+    }
+  },
   register: async function (req, res) {
     try {
       const userEmail = req.body.email.toLowerCase();
@@ -141,6 +180,14 @@ module.exports = {
         });
         return;
       }
+      if (req.body.currency === undefined) {
+        res.status(409).send({
+          message: "Currency is required",
+          success: false,
+          data: {},
+        });
+        return;
+      }
 
       if (
         req.body.socketuserId === undefined ||
@@ -156,6 +203,7 @@ module.exports = {
       }
 
       const token = req.body.token;
+      const currency = req.body.currency;
       const socketuserId = parseInt(req.body.socketuserId);
       const amount = parseInt(req.body.amount);
       const getUser = await user.find({ password: token });
@@ -191,7 +239,14 @@ module.exports = {
         });
         return;
       }
-
+      if (getUser[0].balance[currency] === undefined) {
+        res.status(409).send({
+          message: "Currency is invalid",
+          success: false,
+          data: {},
+        });
+        return;
+      }
       if (!game.betTime) {
         res.status(409).send({
           message: `Time Finsihed. Place bet on next round`,
@@ -209,7 +264,11 @@ module.exports = {
         return;
       }
 
-      await user.updateOne({ password: token }, { $inc: { balance: -amount } });
+      await user.findByIdAndUpdate(getUser[0]._id, {
+        $inc: {
+          [`balance.${currency}`]: -amount,
+        },
+      });
 
       const betData = {
         hash: game.thisRound.hash,
@@ -275,7 +334,17 @@ module.exports = {
         return;
       }
 
+      if (req.body.currency === undefined) {
+        res.status(409).send({
+          message: "Currency is required",
+          success: false,
+          data: {},
+        });
+        return;
+      }
+
       const token = req.body.token;
+      const currency = req.body.currency;
       const getUser = await user.find({ password: token });
       const socketuserId = parseInt(req.body.socketuserId);
       const getRound = await round.find({
@@ -296,6 +365,15 @@ module.exports = {
       if (getUser.length === 0) {
         res.status(401).send({
           message: `Please login to play`,
+          success: false,
+          data: {},
+        });
+        return;
+      }
+
+      if (getUser[0].balance[currency] === undefined) {
+        res.status(409).send({
+          message: "Currency is invalid",
           success: false,
           data: {},
         });
@@ -330,10 +408,11 @@ module.exports = {
       // game.broadcast({ type: "betData", betData: betData });
       cashoutOdds = game.crashNumber;
       winAmount = (cashoutOdds * getRound[0].amount).toFixed(2);
-      await user.updateOne(
-        { password: token },
-        { $inc: { balance: winAmount } }
-      );
+      await user.findByIdAndUpdate(getUser[0]._id, {
+        $inc: {
+          [`balance.${currency}`]: parseFloat(winAmount),
+        },
+      });
       await round.updateOne(
         {
           $and: [
@@ -358,9 +437,11 @@ module.exports = {
       res.status(200).send({
         data: getRound,
         message: `Cashed out ${winAmount}`,
+        amount: winAmount,
         success: true,
       });
     } catch (error) {
+      console.log(error);
       res.status(422).send({
         message: "Internal server error",
         success: false,

@@ -107,6 +107,7 @@ module.exports = {
       this.thisRound.crashed = true;
       this.speed.use = "0.01";
       this.speed.logic = 1;
+      this.updateDataRound();
       this.thisRound.hash = this.encrypt(this.thisRound.crash);
       this.broadcast({
         type: "crashed",
@@ -116,8 +117,6 @@ module.exports = {
       // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
 
       clearInterval(this.streamCrash);
-
-      this.updateDataRound();
 
       this.streamTimerF();
     } else {

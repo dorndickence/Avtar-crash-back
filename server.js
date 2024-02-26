@@ -42,6 +42,9 @@ app.post("/login", (req, res) => {
   // console.log(req);
   user.login(req, res);
 });
+app.post("/balance", (req, res) => {
+  user.balance(req, res);
+});
 app.post("/bet", (req, res) => {
   user.bet(req, res);
 });
@@ -63,8 +66,15 @@ app.post("/deposit-history", (req, res) => {
 app.post("/withdraw-history", (req, res) => {
   history.withdraw(req, res);
 });
+app.post("/game-history", (req, res) => {
+  history.game(req, res);
+});
 app.get("/cron-deposit", (req, res) => {
   cron.deposit(res);
+});
+
+app.post("/depositCheck", (req, res) => {
+  trans.depositCheck(req, res);
 });
 
 io.on("connection", async (socket, req) => {

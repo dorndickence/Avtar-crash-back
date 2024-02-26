@@ -1,6 +1,8 @@
 const user = require("../model/user");
 const deposit = require("../model/deposit");
 const withdraw = require("../model/withdraw");
+const round = require("../model/round");
+
 module.exports = {
   deposit: async function (req, res) {
     try {
@@ -10,6 +12,22 @@ module.exports = {
 
         res.status(200).send({
           message: "User Deposit History",
+          success: false,
+          data: history,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  game: async function (req, res) {
+    try {
+      const privateUsername = await this.authUser(req, res, "privateUsername");
+      if (privateUsername) {
+        const history = await round.find({ privateUsername: privateUsername });
+
+        res.status(200).send({
+          message: "User Game History",
           success: false,
           data: history,
         });
@@ -34,7 +52,7 @@ module.exports = {
       console.log(error);
     }
   },
-  authUser: async function (req, res) {
+  authUser: async function (req, res, type) {
     if (req.body.token === undefined) {
       res.status(400).send({
         message: "Token is required",
@@ -62,6 +80,10 @@ module.exports = {
       });
       return false;
     }
-    return getUser[0]._id;
+    if (type === "privateUsername") {
+      return getUser[0].privateUsername;
+    } else {
+      return getUser[0]._id;
+    }
   },
 };
