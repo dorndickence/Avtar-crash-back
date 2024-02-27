@@ -8,6 +8,7 @@ const cors = require("cors");
 const { mongoose } = require("mongoose");
 const game = require("./game/gameFunction");
 const user = require("./users/user");
+const partner = require("./partners/partner");
 const app = express();
 const livebet = require("./users/livebet");
 const trans = require("./users/trans");
@@ -35,9 +36,19 @@ try {
   throw error;
 }
 
+//partner
+app.post("/partner/register", (req, res) => {
+  partner.register(req, res);
+});
+app.post("/partner/login", (req, res) => {
+  partner.login(req, res);
+});
+//partner end
+
 app.post("/register", (req, res) => {
   user.register(req, res);
 });
+
 app.post("/login", (req, res) => {
   // console.log(req);
   user.login(req, res);
