@@ -378,8 +378,8 @@ module.exports = {
       const createdRound = await round.create(betData);
 
       let timeout = 0;
-      timeout = game.timer * 1000;
-      timeout = 11000 - timeout;
+      timeout = game.timer * 600;
+      timeout = 6600 - timeout;
 
       const sendData = {
         amount: amount,
