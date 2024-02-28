@@ -47,17 +47,28 @@ module.exports = {
     }
     return null;
   },
-  getRandomNumber: function (min, max, decimalPlaces) {
+  getRandomNumber: function (min, max, decimalPlaces, array) {
     // Generate a random number between min and max (inclusive)
-    let randomNumber = Math.random() * (max - min) + min;
+    const xxx = Math.random() * (max - min) + min;
+    let randomNumber = Math.round(xxx);
+    // console.log(parseInt(xxx.toFixed(0)), randomNumber);
+
+    // Round the number to the specified decimal places
+    // if (decimalPlaces !== undefined) {
+    //   const factor = Math.pow(10, decimalPlaces);
+    //   randomNumber = Math.round(randomNumber * factor) / factor;
+    // }
+
+    const newNum = array[randomNumber];
+    // Generate a random number between min and max (inclusive)
+    let randomNumberx = Math.random() * (newNum.max - newNum.min) + newNum.min;
 
     // Round the number to the specified decimal places
     if (decimalPlaces !== undefined) {
       const factor = Math.pow(10, decimalPlaces);
-      randomNumber = Math.round(randomNumber * factor) / factor;
+      randomNumberx = Math.round(randomNumberx * factor) / factor;
     }
-
-    return randomNumber;
+    return randomNumberx;
   },
   encrypt: function (object) {
     // Encryption
@@ -78,10 +89,39 @@ module.exports = {
   generateRandomCrash: function () {
     if (this.thisRound.crashed) {
       // Example usage:
-      const min = 1.0;
-      const max = 2.0;
+      const array = [
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 3.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 4.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 5.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 6.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 7.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 10.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 30.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 100.0 },
+        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 2.0 },
+      ];
+      const min = 0;
+      const max = array.length - 1;
+
       const decimalPlaces = 2;
-      const randomNumber = this.getRandomNumber(min, max, decimalPlaces); // Use this.getRandomNumber() to reference the getRandomNumber function
+      const randomNumber = this.getRandomNumber(min, max, decimalPlaces, array); // Use this.getRandomNumber() to reference the getRandomNumber function
 
       this.thisRound.crashed = false;
       // broadcast({ type: "crashed", crashed: thisRound.crashed });
@@ -124,19 +164,19 @@ module.exports = {
         // this.speed.use = "0.02";
         this.speed.logic = 2;
         clearInterval(this.streamCrash);
-        this.streamCrashF(180);
+        this.streamCrashF(120);
       } else if (this.crashNumber > 1.3 && this.speed.logic === 2) {
         this.speed.use = "0.01";
         this.speed.logic = 3;
         clearInterval(this.streamCrash);
-        this.streamCrashF(150);
+        this.streamCrashF(100);
       } else if (this.crashNumber > 1.6 && this.speed.logic === 3) {
-        this.speed.use = "0.04";
+        this.speed.use = "0.01";
         this.speed.logic = 4;
         clearInterval(this.streamCrash);
-        this.streamCrashF(120);
+        this.streamCrashF(80);
       } else if (this.crashNumber > 2.1 && this.speed.logic === 4) {
-        this.speed.use = "0.05";
+        this.speed.use = "0.03";
         this.speed.logic = 5;
         clearInterval(this.streamCrash);
         this.streamCrashF(120);
@@ -155,6 +195,11 @@ module.exports = {
         this.speed.logic = 8;
         clearInterval(this.streamCrash);
         this.streamCrashF(60);
+      } else if (this.crashNumber > 30.7 && this.speed.logic === 8) {
+        this.speed.use = "0.15";
+        this.speed.logic = 9;
+        clearInterval(this.streamCrash);
+        this.streamCrashF(50);
       } else {
         this.crashStreaming();
       }
@@ -164,7 +209,7 @@ module.exports = {
 
     //console.log(typeof crashNumber, crashNumber);
   },
-  streamCrashF: function (timing = 300) {
+  streamCrashF: function (timing = 200) {
     this.streamCrash = setInterval(() => {
       this.crashRunner();
     }, timing);
@@ -186,7 +231,7 @@ module.exports = {
         this.crashNumber = new Decimal("0.99");
         this.generateRandomCrash();
       }
-    }, 900);
+    }, 600);
   },
   thisRound: {
     crash: 0,

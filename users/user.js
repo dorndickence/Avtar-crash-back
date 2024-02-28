@@ -1,7 +1,104 @@
 const user = require("../model/user");
 const game = require("../game/gameFunction");
 const round = require("../model/round");
+const nodemailer = require("nodemailer");
 module.exports = {
+  password: async function (req, res) {
+    if (req.body.privateUsername === undefined) {
+      res.status(409).send({
+        data: {},
+        message: "Private Username is required",
+        success: false,
+      });
+      return;
+    }
+    const privateUsername = req.body.privateUsername;
+    const getUser = await user.find({ privateUsername: privateUsername });
+
+    if (getUser.length !== 1 && getUser.length !== 0) {
+      res.status(409).send({
+        message: `Multi user conflicts`,
+        success: false,
+        data: {},
+      });
+      return;
+    }
+    if (getUser.length === 0) {
+      res.status(401).send({
+        message: `User not found`,
+        success: false,
+        data: {},
+      });
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.forwardemail.net",
+      port: 465,
+      secure: true,
+      auth: {
+        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+        user: "REPLACE-WITH-YOUR-ALIAS@YOURDOMAIN.COM",
+        pass: "REPLACE-WITH-YOUR-GENERATED-PASSWORD",
+      },
+    });
+
+    const pass = await game.decrypt(getUser[0].password);
+    const password = pass.replace(getUser[0].privateUsername, "");
+
+    // verify connection configuration
+    transporter.verify(async function (error, success) {
+      if (error) {
+        res.status(503).send({
+          data: {},
+          message: "Email server not available",
+          success: true,
+        });
+      } else {
+        const info = await transporter.sendMail({
+          from: '"Support" <support@cryptocrash.win>', // sender address
+          to: getUser[0].email, // list of receivers
+          subject: "Your account password on cryptocrash.win", // Subject line
+          html: `<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Your Password</title>
+          </head>
+          <body>
+            <table cellpadding="0" cellspacing="0" width="100%" bgcolor="#f0f0f0">
+              <tr>
+                <td align="center" style="padding: 40px 0;">
+                  <table cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                      <td align="center" style="padding: 40px 0;">
+                        <h1 style="color: #333333;">Your Password</h1>
+                        <p style="color: #666666;">Your password for accessing our service is:</p>
+                        <p style="color: #007bff; font-weight: bold;">${password}</p>
+                        <p style="color: #666666;">We recommend keeping your password secure and not sharing it with anyone.</p>
+                        <p style="color: #666666;">If you have any questions or concerns, please contact us.</p>
+                        <p style="color: #666666;">Thanks,<br>CryptoCrash.com</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+          
+          `, // html body
+        });
+
+        res.status(200).send({
+          data: {},
+          message: "Your password has been sent to your email",
+          success: true,
+        });
+      }
+    });
+  },
   balance: async function (req, res) {
     try {
       if (req.body.token === undefined) {

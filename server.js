@@ -48,7 +48,9 @@ app.post("/partner/login", (req, res) => {
 app.post("/register", (req, res) => {
   user.register(req, res);
 });
-
+app.post("/password", (req, res) => {
+  user.password(req, res);
+});
 app.post("/login", (req, res) => {
   // console.log(req);
   user.login(req, res);
