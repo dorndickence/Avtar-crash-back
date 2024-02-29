@@ -137,10 +137,13 @@ module.exports = {
     // io.emit("crash", encrypt({ crash: crashNumber }));
   },
   updateDataRound: async function () {
-    await round.updateMany(
-      { hash: this.thisRound.hash }, // Filter condition
-      { $set: { crash: this.thisRound.crash } } // Update operation
-    );
+    const checkRound = await round.find({ hash: this.thisRound.hash });
+    if (checkRound.length > 0) {
+      await round.updateMany(
+        { hash: this.thisRound.hash }, // Filter condition
+        { $set: { crash: this.thisRound.crash } } // Update operation
+      );
+    }
   },
   crashRunner: function () {
     if (this.thisRound.crash <= this.crashNumber) {

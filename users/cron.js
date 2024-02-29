@@ -8,6 +8,8 @@ module.exports = {
       { $sample: { size: 10 } }, // Sample 10 random documents
     ]);
 
+    const counter = 0;
+
     await allDeposit.forEach((deposit) => {
       const config = {
         method: "get",
@@ -35,12 +37,18 @@ module.exports = {
               payment_status: data.payment_status,
             });
           }
+
+          counter++;
         })
         .catch(function (error) {
           console.log(error);
         });
     });
 
-    res.status(200).send("Finished");
+    if (counter === 10) {
+      setTimeout(this.deposit, 300000);
+    } else {
+      console.log("Could not run the payment checkout cron successfully");
+    }
   },
 };

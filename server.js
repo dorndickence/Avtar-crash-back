@@ -16,7 +16,7 @@ const history = require("./users/history");
 const cron = require("./users/cron");
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://localhost:3002"],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })
@@ -25,23 +25,41 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new WebSocket.Server({ server });
 
-try {
-  const connected = mongoose.connect(
-    "mongodb+srv://ronysarker135:Rony2Sarker@cluster0.vbnhieb.mongodb.net/?retryWrites=true&w=majority"
-  );
-  if (connected) {
-    console.log("connected mongodb");
+async function connect() {
+  try {
+    const connected = await mongoose.connect(
+      "mongodb+srv://ronysarker135:Rony2Sarker@cluster0.vbnhieb.mongodb.net/?retryWrites=true&w=majority"
+    );
+    if (connected) {
+      game.streamCrashF();
+      console.log("connected mongo");
+    }
+  } catch (error) {
+    console.log("can't connect mongo");
+    console.error(error);
   }
-} catch (error) {
-  throw error;
 }
-
 //partner
 app.post("/partner/register", (req, res) => {
   partner.register(req, res);
 });
 app.post("/partner/login", (req, res) => {
   partner.login(req, res);
+});
+app.post("/partner/balance", (req, res) => {
+  partner.balance(req, res);
+});
+app.post("/partner/players", (req, res) => {
+  partner.players(req, res);
+});
+app.post("/partner/withdraw", (req, res) => {
+  partner.withdraw(req, res);
+});
+app.post("/partner/withdraw-history", (req, res) => {
+  partner.withdrawHistory(req, res);
+});
+app.post("/partner/password", (req, res) => {
+  partner.password(req, res);
 });
 //partner end
 
@@ -81,9 +99,6 @@ app.post("/withdraw-history", (req, res) => {
 });
 app.post("/game-history", (req, res) => {
   history.game(req, res);
-});
-app.get("/cron-deposit", (req, res) => {
-  cron.deposit(res);
 });
 
 app.post("/depositCheck", (req, res) => {
@@ -125,8 +140,11 @@ io.on("connection", async (socket, req) => {
 io.on("error", (error) => {
   console.error("Socket.io error:", error);
 });
-
-game.streamCrashF(); //initial start
+// if (connect()) {
+//   game.streamCrashF();
+//   // cron.deposit();
+// }
+connect();
 server.listen(3001, () => {
   console.log("Server is running on port 3001");
 });

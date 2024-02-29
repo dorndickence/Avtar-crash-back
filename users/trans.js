@@ -175,6 +175,15 @@ module.exports = {
       return;
     }
 
+    if (isNaN(amount)) {
+      res.status(409).send({
+        message: `Type Number.`,
+        success: false,
+        data: {},
+      });
+      return;
+    }
+
     // check for previous withdraw request
 
     const getUserWithdraw = await withdraw.find({

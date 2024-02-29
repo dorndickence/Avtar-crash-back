@@ -1,7 +1,9 @@
 const user = require("../model/user");
 const game = require("../game/gameFunction");
 const round = require("../model/round");
+const partner = require("../model/partner");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 module.exports = {
   password: async function (req, res) {
     if (req.body.privateUsername === undefined) {
@@ -33,13 +35,13 @@ module.exports = {
     }
 
     const transporter = nodemailer.createTransport({
-      host: "smtp.forwardemail.net",
-      port: 465,
-      secure: true,
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      secure: process.env.MAIL_SECURE,
       auth: {
         // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-        user: "REPLACE-WITH-YOUR-ALIAS@YOURDOMAIN.COM",
-        pass: "REPLACE-WITH-YOUR-GENERATED-PASSWORD",
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
     });
 
@@ -141,6 +143,8 @@ module.exports = {
   register: async function (req, res) {
     try {
       const userEmail = req.body.email.toLowerCase();
+      const promo = req.body.promo;
+      let partnerId = null;
       const userPublicUsername = req.body.publicUsername;
       const userPrivateUsername = req.body.privateUsername.toLowerCase();
       const userPassword = req.body.password;
@@ -171,11 +175,21 @@ module.exports = {
         return;
       }
 
+      if (promo.code && promo.type === "promo") {
+        const getPartner = await partner.find({ username: promo.code });
+        partnerId = getPartner[0]._id;
+      }
+
+      if (promo.code && promo.type === "partnerId") {
+        partnerId = promo.code;
+      }
+
       const userObject = {
         privateUsername: userPrivateUsername,
         email: userEmail,
         publicUsername: userPublicUsername,
         password: userEncryptedHashPassword,
+        partnerId: partnerId,
       };
 
       const register = await user.create(userObject);
@@ -301,9 +315,11 @@ module.exports = {
 
       const token = req.body.token;
       const currency = req.body.currency;
+
       const socketuserId = parseInt(req.body.socketuserId);
       const amount = parseInt(req.body.amount);
       const getUser = await user.find({ password: token });
+      const partnerId = getUser[0].partnerId;
       const getRound = await round.find({
         $and: [
           { hash: game.thisRound.hash },
@@ -366,6 +382,17 @@ module.exports = {
           [`balance.${currency}`]: -amount,
         },
       });
+
+      if (partnerId !== undefined && partnerId !== null) {
+        const partnerCommisssion = parseFloat(
+          (amount / 100) * process.env.PARTNER_PERCENT
+        );
+        await partner.findByIdAndUpdate(partnerId, {
+          $inc: {
+            [`balance.${currency}`]: partnerCommisssion,
+          },
+        });
+      }
 
       const betData = {
         hash: game.thisRound.hash,
@@ -444,6 +471,7 @@ module.exports = {
       const currency = req.body.currency;
       const getUser = await user.find({ password: token });
       const socketuserId = parseInt(req.body.socketuserId);
+      const partnerId = getUser[0].partnerId;
       const getRound = await round.find({
         $and: [
           { hash: game.thisRound.hash },
@@ -519,6 +547,17 @@ module.exports = {
         },
         { $set: { odds: cashoutOdds, win: winAmount } }
       );
+
+      if (partnerId !== undefined && partnerId !== null) {
+        const partnerCommisssion = parseFloat(
+          (winAmount / 100) * process.env.PARTNER_PERCENT
+        );
+        await partner.findByIdAndUpdate(partnerId, {
+          $inc: {
+            [`balance.${currency}`]: -partnerCommisssion,
+          },
+        });
+      }
 
       game.broadcast(
         {
