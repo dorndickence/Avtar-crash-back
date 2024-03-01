@@ -409,19 +409,25 @@ module.exports = {
       timeout = 6600 - timeout;
 
       const sendData = {
+        token: token,
+        timeout: timeout,
+      };
+
+      const sendDataGlobal = {
         amount: amount,
         publicUsername: getUser[0].publicUsername,
         win: 0,
         odds: 0,
         _id: createdRound._id,
-        token: token,
-        timeout: timeout,
       };
 
       game.broadcast(
-        { type: "betData", betData: sendData },
+        { type: "notifyBetPlaced", betData: sendData },
         game.getWebSocketByUserId(socketuserId)
       );
+
+      game.broadcast({ type: "betData", betData: sendDataGlobal });
+
       res.status(200).send({
         data: {},
         message: "Bet accepted",
@@ -561,14 +567,18 @@ module.exports = {
 
       game.broadcast(
         {
-          type: "winData",
-          _id: getRound[0]._id,
-          amount: winAmount,
-          odds: cashoutOdds,
+          type: "notifyBetWon",
           token: token,
         },
         game.getWebSocketByUserId(socketuserId)
       );
+
+      game.broadcast({
+        type: "winData",
+        _id: getRound[0]._id,
+        amount: winAmount,
+        odds: cashoutOdds,
+      });
 
       res.status(200).send({
         data: getRound,
