@@ -397,6 +397,7 @@ module.exports = {
       const betData = {
         hash: game.thisRound.hash,
         amount: amount,
+        currency: currency,
         publicUsername: getUser[0].publicUsername,
         privateUsername: getUser[0].privateUsername,
         win: 0,
@@ -416,6 +417,7 @@ module.exports = {
       const sendDataGlobal = {
         amount: amount,
         publicUsername: getUser[0].publicUsername,
+        currency: currency,
         win: 0,
         odds: 0,
         _id: createdRound._id,
@@ -577,6 +579,7 @@ module.exports = {
         type: "winData",
         _id: getRound[0]._id,
         amount: winAmount,
+        currency: currency,
         odds: cashoutOdds,
       });
 

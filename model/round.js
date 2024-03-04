@@ -7,6 +7,7 @@ const roundModel = mongoose.Schema({
   },
   publicUsername: { type: String, required: true },
   privateUsername: { type: String, required: true },
+  currency: { type: String, required: true },
   win: {
     type: mongoose.Types.Decimal128,
     default: "0",

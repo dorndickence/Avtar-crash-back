@@ -305,6 +305,7 @@ module.exports = {
         res.status(200).send({
           data: getUserDeposit[0].pay_address,
           depositId: getUserDeposit[0]._id,
+          minimum: parseFloat(getUserDeposit[0].minimum_amount),
           message: `Deposit request accepted`,
           success: true,
         });
@@ -324,7 +325,7 @@ module.exports = {
 
       axios(checkData)
         .then((response) => {
-          const minUsd = Math.round(response.data.fiat_equivalent) + 5;
+          const minUsd = Math.round(response.data.fiat_equivalent) + 10;
           this.sendResponse(coin, getUser, minUsd, res);
           return;
         })
@@ -373,6 +374,7 @@ module.exports = {
           pay_address: response.data.pay_address,
           user_id: getUser[0]._id,
           payment_status: response.data.payment_status,
+          minimum_amount: response.data.pay_amount,
           pay_currency: response.data.pay_currency,
         };
 
@@ -380,6 +382,7 @@ module.exports = {
 
         res.status(200).send({
           data: response.data.pay_address,
+          minimum: response.data.pay_amount,
           depositId: createDep._id,
           message: `Deposit request accepted`,
           success: true,
