@@ -4,6 +4,7 @@ const round = require("../model/round");
 const partner = require("../model/partner");
 const game = require("../game/gameFunction");
 const axios = require("axios");
+const cryptoPrice = require("../model/cryptoPrice");
 require("dotenv").config();
 module.exports = {
   password: async function (req, res) {
@@ -189,6 +190,32 @@ module.exports = {
       return;
     }
 
+    const balanceAll = getUser[0].balance;
+    let totalUsd = 0;
+    await Promise.all(
+      Object.entries(balanceAll).map(async ([currency, amount]) => {
+        const OneCoinToUsdPriceObject = await cryptoPrice.find({
+          name: currency,
+        });
+        const OneCoinToUsdPrice = parseFloat(OneCoinToUsdPriceObject[0].value);
+        const usdAmount = amount * OneCoinToUsdPrice;
+
+        totalUsd += usdAmount;
+      })
+    );
+    const amountInUSdObject = await cryptoPrice.find({
+      name: coin,
+    });
+    const amountInUSd = parseFloat(amountInUSdObject[0].value) * amount;
+    if (totalUsd < amountInUSd) {
+      res.status(409).send({
+        message: `You can't exceed the total profit in USD amount.`,
+        success: false,
+        data: {},
+      });
+      return;
+    }
+
     // check for previous withdraw request
 
     const getUserWithdraw = await partnerWithdraw.find({
@@ -363,7 +390,6 @@ module.exports = {
       }
       const token = req.body.token;
       const getUser = await partner.find({ password: token });
-      const getPartneredUser = await user.find({ partnerId: getUser[0]._id });
 
       if (getUser.length !== 1 && getUser.length !== 0) {
         res.status(409).send({
@@ -381,8 +407,57 @@ module.exports = {
         });
         return;
       }
-
+      const getPartneredUser = await user.find({ partnerId: getUser[0]._id });
       const balance = getUser[0].balance;
+      let totalUsd = 0;
+      let totalMinus = 0;
+      let totalPlus = 0;
+      const withdrawable = [];
+
+      await Promise.all(
+        Object.entries(balance).map(async ([currency, amount]) => {
+          const OneCoinToUsdPriceObject = await cryptoPrice.find({
+            name: currency,
+          });
+          const OneCoinToUsdPrice = parseFloat(
+            OneCoinToUsdPriceObject[0].value
+          );
+          const usdAmount = amount * OneCoinToUsdPrice;
+
+          totalUsd += usdAmount;
+
+          //here goes available withdraw currency
+          if (amount < 0) {
+            totalMinus += usdAmount * -1;
+          }
+          if (amount > 0) {
+            totalPlus += usdAmount;
+          }
+        })
+      );
+
+      await Promise.all(
+        Object.entries(balance).map(async ([currency, amount]) => {
+          const OneCoinToUsdPriceObject = await cryptoPrice.find({
+            name: currency,
+          });
+          const OneCoinToUsdPrice = parseFloat(
+            OneCoinToUsdPriceObject[0].value
+          );
+          const usdAmount = amount * OneCoinToUsdPrice;
+
+          if (amount > 0) {
+            const remainingUsd =
+              usdAmount - (totalPlus + totalMinus - usdAmount);
+            const remainingCoin = remainingUsd / OneCoinToUsdPrice;
+
+            const withdrawbleObject = {};
+            withdrawbleObject.name = currency;
+            withdrawbleObject.value = remainingCoin;
+            withdrawable.push(withdrawbleObject);
+          }
+        })
+      );
 
       const totalWithdrawn = await partnerWithdraw.find({
         partnerId: getUser[0]._id,
@@ -393,6 +468,8 @@ module.exports = {
 
       res.status(200).send({
         data: balance,
+        totalUsd: totalUsd,
+        withdrawable: withdrawable,
         partners: getPartneredUser.length,
         withdrawn: total,
         partnerId: getUser[0]._id,

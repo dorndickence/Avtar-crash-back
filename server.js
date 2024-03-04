@@ -33,6 +33,7 @@ async function connect() {
     if (connected) {
       game.streamCrashF();
       console.log("connected mongo");
+      // cron.cryptoPrice();
     }
   } catch (error) {
     console.log("can't connect mongo");
@@ -145,6 +146,7 @@ io.on("error", (error) => {
 //   // cron.deposit();
 // }
 connect();
+
 server.listen(3001, () => {
   console.log("Server is running on port 3001");
 });
