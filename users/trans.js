@@ -218,11 +218,11 @@ module.exports = {
           });
           return;
         }
-        await user.findByIdAndUpdate(getUser[0]._id, {
-          $inc: {
-            [`balance.${coin}`]: -amount,
-          },
-        });
+        // await user.findByIdAndUpdate(getUser[0]._id, {
+        //   $inc: {
+        //     [`balance.${coin}`]: -amount,
+        //   },
+        // });
         await withdraw.create({
           status: "In Progress",
           user_id: getUser[0]._id,

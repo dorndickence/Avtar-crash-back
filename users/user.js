@@ -317,7 +317,7 @@ module.exports = {
       const currency = req.body.currency;
 
       const socketuserId = parseInt(req.body.socketuserId);
-      const amount = parseInt(req.body.amount);
+      const amount = parseFloat(req.body.amount);
       const getUser = await user.find({ password: token });
       const partnerId = getUser[0].partnerId;
       const getRound = await round.find({
@@ -540,7 +540,7 @@ module.exports = {
 
       // game.broadcast({ type: "betData", betData: betData });
       cashoutOdds = game.crashNumber;
-      winAmount = (cashoutOdds * getRound[0].amount).toFixed(2);
+      winAmount = cashoutOdds * getRound[0].amount;
       await user.findByIdAndUpdate(getUser[0]._id, {
         $inc: {
           [`balance.${currency}`]: parseFloat(winAmount),
@@ -578,7 +578,7 @@ module.exports = {
       game.broadcast({
         type: "winData",
         _id: getRound[0]._id,
-        amount: winAmount,
+        amount: winAmount.toFixed(8),
         currency: currency,
         odds: cashoutOdds,
       });
@@ -586,7 +586,7 @@ module.exports = {
       res.status(200).send({
         data: getRound,
         message: `Cashed out ${winAmount}`,
-        amount: winAmount,
+        amount: winAmount.toFixed(8),
         success: true,
       });
     } catch (error) {

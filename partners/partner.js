@@ -284,7 +284,29 @@ module.exports = {
   players: async function (req, res) {
     try {
       const getPartner = await this.authPartner(req, res);
-      const allPlayers = await user.find({ partnerId: getPartner._id });
+
+      const historyAll = await user.find({ partnerId: getPartner._id });
+
+      const perPageData = 20;
+      const requestedPage = req.body.page || 0;
+
+      let requestedPageNumber = parseInt(requestedPage);
+      let skip = perPageData * requestedPageNumber;
+      if (requestedPageNumber === 0) {
+        skip = 0;
+      }
+
+      const total = Math.ceil(historyAll.length / 20);
+      const totalArray = [];
+      for (i = 1; i <= total; i++) {
+        totalArray.push(i);
+      }
+
+      const allPlayers = await user
+        .find({ partnerId: getPartner._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPageData);
 
       const playerObject = await Promise.all(
         allPlayers.map(async (player) => {
@@ -318,6 +340,7 @@ module.exports = {
       res.status(200).send({
         message: "Players History",
         data: playerObject,
+        totalPages: totalArray,
       });
     } catch (error) {
       if (typeof error !== "string") {
@@ -358,12 +381,34 @@ module.exports = {
     try {
       const getUser = await this.authPartner(req, res);
 
-      const history = await partnerWithdraw.find({ partnerId: getUser._id });
+      const historyAll = await partnerWithdraw.find({ partnerId: getUser._id });
+
+      const perPageData = 20;
+      const requestedPage = req.body.page || 0;
+
+      let requestedPageNumber = parseInt(requestedPage);
+      let skip = perPageData * requestedPageNumber;
+      if (requestedPageNumber === 0) {
+        skip = 0;
+      }
+
+      const total = Math.ceil(historyAll.length / 20);
+      const totalArray = [];
+      for (i = 1; i <= total; i++) {
+        totalArray.push(i);
+      }
+
+      const history = await partnerWithdraw
+        .find({ partnerId: getUser._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPageData);
 
       res.status(200).send({
         message: "Partner Withdraw History",
         success: false,
         data: history,
+        totalPages: totalArray,
       });
     } catch (error) {
       if (typeof error !== "string") {
