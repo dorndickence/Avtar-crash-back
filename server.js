@@ -41,6 +41,9 @@ async function connect() {
     console.error(error);
   }
 }
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 //admin
 app.post("/admin/login", (req, res) => {
