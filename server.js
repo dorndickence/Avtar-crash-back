@@ -17,7 +17,12 @@ const history = require("./users/history");
 const cron = require("./users/cron");
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3002", "crashfly.com"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3002",
+      "crashfly.com",
+      "https://jellyfish-app-f8hbz.ondigitalocean.app/",
+    ],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })
