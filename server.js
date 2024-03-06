@@ -17,7 +17,7 @@ const history = require("./users/history");
 const cron = require("./users/cron");
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3002"],
+    origin: ["http://localhost:3000", "http://localhost:3002", "crashfly.com"],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })
