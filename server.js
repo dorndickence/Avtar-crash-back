@@ -9,6 +9,7 @@ const { mongoose } = require("mongoose");
 const game = require("./game/gameFunction");
 const user = require("./users/user");
 const partner = require("./partners/partner");
+const admin = require("./admin/admin");
 const app = express();
 const livebet = require("./users/livebet");
 const trans = require("./users/trans");
@@ -40,6 +41,15 @@ async function connect() {
     console.error(error);
   }
 }
+
+//admin
+app.post("/admin/login", (req, res) => {
+  admin.login(req, res);
+});
+app.post("/admin/user-withdraw", (req, res) => {
+  admin.userWithdraw(req, res);
+});
+//admin end
 //partner
 app.post("/partner/register", (req, res) => {
   partner.register(req, res);

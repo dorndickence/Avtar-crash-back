@@ -15,8 +15,8 @@ const depositModel = mongoose.Schema({
     required: false,
   },
   pay_currency: { type: String, required: true },
-  createdAt: { type: Date, default: new Date(), required: false },
-  updatedAt: { type: Date, default: new Date(), required: false },
+  createdAt: { type: Date, default: Date.now, required: false },
+  updatedAt: { type: Date, default: Date.now, required: false },
 });
 
 const deposit = mongoose.model("deposit", depositModel);

@@ -1,6 +1,7 @@
 const user = require("../model/user");
 const game = require("../game/gameFunction");
 const round = require("../model/round");
+const cryptoPrice = require("../model/cryptoPrice");
 const partner = require("../model/partner");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
@@ -368,7 +369,7 @@ module.exports = {
         });
         return;
       }
-      if (getUser[0].balance < amount) {
+      if (getUser[0].balance[currency] < amount) {
         res.status(409).send({
           message: `Insufficient balance`,
           success: false,
@@ -394,9 +395,14 @@ module.exports = {
         });
       }
 
+      const oneCryptoInUSD = await cryptoPrice.find({ name: currency });
+      const priceOne = parseFloat(oneCryptoInUSD[0].value);
+      const amountInUSD = priceOne * amount;
+
       const betData = {
         hash: game.thisRound.hash,
         amount: amount,
+        amountInUSD: amountInUSD,
         currency: currency,
         publicUsername: getUser[0].publicUsername,
         privateUsername: getUser[0].privateUsername,
@@ -416,6 +422,7 @@ module.exports = {
 
       const sendDataGlobal = {
         amount: amount,
+        amountInUSD: amountInUSD.toFixed(2),
         publicUsername: getUser[0].publicUsername,
         currency: currency,
         win: 0,
@@ -539,13 +546,20 @@ module.exports = {
       // game.betData.includes();
 
       // game.broadcast({ type: "betData", betData: betData });
+
       cashoutOdds = game.crashNumber;
       winAmount = cashoutOdds * getRound[0].amount;
+
       await user.findByIdAndUpdate(getUser[0]._id, {
         $inc: {
           [`balance.${currency}`]: parseFloat(winAmount),
         },
       });
+
+      const oneCryptoInUSD = await cryptoPrice.find({ name: currency });
+      const priceOne = parseFloat(oneCryptoInUSD[0].value);
+      const amountInUSD = priceOne * winAmount;
+
       await round.updateOne(
         {
           $and: [
@@ -553,7 +567,7 @@ module.exports = {
             { privateUsername: getUser[0].privateUsername },
           ],
         },
-        { $set: { odds: cashoutOdds, win: winAmount } }
+        { $set: { odds: cashoutOdds, win: winAmount, winInUSD: amountInUSD } }
       );
 
       if (partnerId !== undefined && partnerId !== null) {
@@ -579,6 +593,7 @@ module.exports = {
         type: "winData",
         _id: getRound[0]._id,
         amount: winAmount.toFixed(8),
+        amountInUSD: amountInUSD.toFixed(2),
         currency: currency,
         odds: cashoutOdds,
       });
@@ -586,6 +601,7 @@ module.exports = {
       res.status(200).send({
         data: getRound,
         message: `Cashed out ${winAmount}`,
+        currency: currency,
         amount: winAmount.toFixed(8),
         success: true,
       });

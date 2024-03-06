@@ -27,15 +27,15 @@ module.exports = {
       const players = Allgames.length;
 
       Allgames.forEach((roundObject) => {
-        winnings += parseFloat(roundObject.win);
-        bets += parseFloat(roundObject.amount);
+        winnings += parseFloat(roundObject.winInUSD);
+        bets += parseFloat(roundObject.amountInUSD);
       });
 
       res.status(200).send({
         data: {
           livebets: Allgames,
-          winnings: winnings,
-          bets: bets,
+          winnings: winnings.toFixed(2),
+          bets: bets.toFixed(2),
           players: players,
           userBetActve: userBetActve,
         },

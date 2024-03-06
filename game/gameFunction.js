@@ -91,30 +91,29 @@ module.exports = {
       // Example usage:
       const array = [
         { min: 1.0, max: 2.0 },
-        { min: 1.0, max: 2.0 },
         { min: 1.0, max: 3.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 4.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 5.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 6.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 7.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 10.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 30.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 100.0 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
       ];
       const min = 0;
@@ -138,6 +137,7 @@ module.exports = {
   },
   updateDataRound: async function () {
     const checkRound = await round.find({ hash: this.thisRound.hash });
+
     if (checkRound.length > 0) {
       await round.updateMany(
         { hash: this.thisRound.hash }, // Filter condition
@@ -145,21 +145,21 @@ module.exports = {
       );
     }
   },
-  crashRunner: function () {
+  crashRunner: async function () {
     if (this.thisRound.crash <= this.crashNumber) {
+      clearInterval(this.streamCrash);
       this.thisRound.crashed = true;
       this.speed.use = "0.01";
       this.speed.logic = 1;
-      this.updateDataRound();
-      this.thisRound.hash = this.encrypt(this.thisRound.crash);
       this.broadcast({
         type: "crashed",
         crashed: this.thisRound.crashed,
         crash: this.thisRound.crash,
       });
-      // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
+      await this.updateDataRound();
+      this.thisRound.hash = this.encrypt(this.thisRound.crash);
 
-      clearInterval(this.streamCrash);
+      // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
 
       this.streamTimerF();
     } else {
