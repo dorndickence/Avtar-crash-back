@@ -92,7 +92,6 @@ module.exports = {
       const array = [
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 3.0 },
-        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 4.0 },
         { min: 1.0, max: 1.1 },
@@ -101,7 +100,6 @@ module.exports = {
         { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 6.0 },
-        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 7.0 },
         { min: 1.0, max: 1.1 },
@@ -110,11 +108,9 @@ module.exports = {
         { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
         { min: 1.0, max: 30.0 },
-        { min: 1.0, max: 1.1 },
         { min: 1.0, max: 2.0 },
-        { min: 1.0, max: 100.0 },
         { min: 1.0, max: 1.1 },
-        { min: 1.0, max: 2.0 },
+        { min: 1.0, max: 20.0 },
       ];
       const min = 0;
       const max = array.length - 1;
@@ -200,17 +196,17 @@ module.exports = {
         this.streamCrashF(80);
       } else if (this.crashNumber > 2.1 && this.speed.logic === 80) {
         // this.speed.use = "0.03";
-        this.speed.logic = 50;
+        this.speed.logic = 60;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
-        this.streamCrashF(50);
-      } else if (this.crashNumber > 3.7 && this.speed.logic === 50) {
+        this.streamCrashF(60);
+      } else if (this.crashNumber > 3.7 && this.speed.logic === 60) {
         // this.speed.use = "0.06";
-        this.speed.logic = 30;
+        this.speed.logic = 40;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
-        this.streamCrashF(30);
-      } else if (this.crashNumber > 5.7 && this.speed.logic === 30) {
+        this.streamCrashF(40);
+      } else if (this.crashNumber > 5.7 && this.speed.logic === 40) {
         // this.speed.use = "0.07";
         this.speed.logic = 20;
         clearInterval(this.streamCrash);
@@ -222,7 +218,7 @@ module.exports = {
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(10);
-      } else if (this.crashNumber > 30.7 && this.speed.logic === 10) {
+      } else if (this.crashNumber > 15.7 && this.speed.logic === 10) {
         // this.speed.use = "0.15";
         this.speed.logic = 5;
         clearInterval(this.streamCrash);
