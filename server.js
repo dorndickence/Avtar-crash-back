@@ -17,12 +17,7 @@ const history = require("./users/history");
 const cron = require("./users/cron");
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3002",
-      "crashfly.com",
-      "https://jellyfish-app-f8hbz.ondigitalocean.app/",
-    ],
+    origin: "*",
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })
@@ -148,6 +143,9 @@ io.on("connection", async (socket, req) => {
 
   //senduserid to connected user only
   game.broadcast({ type: "socketuserId", data: assignNumber }, socket);
+  if (!game.thisRound.crashed) {
+    game.broadcastCrash(socket);
+  }
   // console.log(Array.from(game.clients.keys()));
   socket.on("close", function close() {
     // Remove the WebSocket connection from the set

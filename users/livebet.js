@@ -31,6 +31,10 @@ module.exports = {
         bets += parseFloat(roundObject.amountInUSD);
       });
 
+      let timeout = 0;
+      timeout = game.timer * 600;
+      timeout = 6600 - timeout;
+
       res.status(200).send({
         data: {
           livebets: Allgames,
@@ -38,6 +42,7 @@ module.exports = {
           bets: bets.toFixed(2),
           players: players,
           userBetActve: userBetActve,
+          timeout: timeout,
         },
         message: "success",
         success: true,

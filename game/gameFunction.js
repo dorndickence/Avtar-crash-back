@@ -131,9 +131,27 @@ module.exports = {
   crashStreaming: function () {
     let adding = new Decimal(this.speed.use); // Use this.speed.use to reference the speed.use property
     this.crashNumber = this.crashNumber.plus(adding); // Update this.crashNumber
-    this.broadcast({ type: "crash", crash: this.crashNumber }); // Use this.broadcast() to reference the broadcast function
+    // Use this.broadcast() to reference the broadcast function
     // console.log(this.crashNumber);
     // io.emit("crash", encrypt({ crash: crashNumber }));
+  },
+  broadcastCrash: function (singleSocket = null) {
+    if (singleSocket !== null) {
+      this.broadcast(
+        {
+          type: "crash",
+          crash: this.crashNumber,
+          speed: this.speed.logic,
+        },
+        singleSocket
+      );
+    } else {
+      this.broadcast({
+        type: "crash",
+        crash: this.crashNumber,
+        speed: this.speed.logic,
+      });
+    }
   },
   updateDataRound: async function () {
     const checkRound = await round.find({ hash: this.thisRound.hash });
@@ -163,46 +181,53 @@ module.exports = {
 
       this.streamTimerF();
     } else {
-      if (this.crashNumber > 1.1 && this.speed.logic === 1) {
+      if (this.speed.logic === 1) {
         // this.speed.use = "0.02";
-        this.speed.logic = 2;
+        this.speed.logic = 120;
+
+        this.broadcastCrash();
+      } else if (this.crashNumber > 1.3 && this.speed.logic === 120) {
+        // this.speed.use = "0.01";
+        this.speed.logic = 100;
         clearInterval(this.streamCrash);
-        this.streamCrashF(120);
-      } else if (this.crashNumber > 1.3 && this.speed.logic === 2) {
-        this.speed.use = "0.01";
-        this.speed.logic = 3;
-        clearInterval(this.streamCrash);
+        this.broadcastCrash();
         this.streamCrashF(100);
-      } else if (this.crashNumber > 1.6 && this.speed.logic === 3) {
-        this.speed.use = "0.01";
-        this.speed.logic = 4;
+      } else if (this.crashNumber > 1.6 && this.speed.logic === 100) {
+        // this.speed.use = "0.01";
+        this.speed.logic = 80;
         clearInterval(this.streamCrash);
+        this.broadcastCrash();
         this.streamCrashF(80);
-      } else if (this.crashNumber > 2.1 && this.speed.logic === 4) {
-        this.speed.use = "0.03";
+      } else if (this.crashNumber > 2.1 && this.speed.logic === 80) {
+        // this.speed.use = "0.03";
+        this.speed.logic = 50;
+        clearInterval(this.streamCrash);
+        this.broadcastCrash();
+        this.streamCrashF(50);
+      } else if (this.crashNumber > 3.7 && this.speed.logic === 50) {
+        // this.speed.use = "0.06";
+        this.speed.logic = 30;
+        clearInterval(this.streamCrash);
+        this.broadcastCrash();
+        this.streamCrashF(30);
+      } else if (this.crashNumber > 5.7 && this.speed.logic === 30) {
+        // this.speed.use = "0.07";
+        this.speed.logic = 20;
+        clearInterval(this.streamCrash);
+        this.broadcastCrash();
+        this.streamCrashF(20);
+      } else if (this.crashNumber > 10.7 && this.speed.logic === 20) {
+        // this.speed.use = "0.08";
+        this.speed.logic = 10;
+        clearInterval(this.streamCrash);
+        this.broadcastCrash();
+        this.streamCrashF(10);
+      } else if (this.crashNumber > 30.7 && this.speed.logic === 10) {
+        // this.speed.use = "0.15";
         this.speed.logic = 5;
         clearInterval(this.streamCrash);
-        this.streamCrashF(120);
-      } else if (this.crashNumber > 3.7 && this.speed.logic === 5) {
-        this.speed.use = "0.06";
-        this.speed.logic = 6;
-        clearInterval(this.streamCrash);
-        this.streamCrashF(100);
-      } else if (this.crashNumber > 5.7 && this.speed.logic === 6) {
-        this.speed.use = "0.07";
-        this.speed.logic = 7;
-        clearInterval(this.streamCrash);
-        this.streamCrashF(80);
-      } else if (this.crashNumber > 10.7 && this.speed.logic === 7) {
-        this.speed.use = "0.08";
-        this.speed.logic = 8;
-        clearInterval(this.streamCrash);
-        this.streamCrashF(60);
-      } else if (this.crashNumber > 30.7 && this.speed.logic === 8) {
-        this.speed.use = "0.15";
-        this.speed.logic = 9;
-        clearInterval(this.streamCrash);
-        this.streamCrashF(50);
+        this.broadcastCrash();
+        this.streamCrashF(5);
       } else {
         this.crashStreaming();
       }
@@ -212,7 +237,7 @@ module.exports = {
 
     //console.log(typeof crashNumber, crashNumber);
   },
-  streamCrashF: function (timing = 200) {
+  streamCrashF: function (timing = 120) {
     this.streamCrash = setInterval(() => {
       this.crashRunner();
     }, timing);
@@ -231,7 +256,7 @@ module.exports = {
         this.betTime = false;
         this.streamCrashF();
         this.timer = -1;
-        this.crashNumber = new Decimal("0.99");
+        this.crashNumber = new Decimal("1.00");
         this.generateRandomCrash();
       }
     }, 600);
@@ -242,7 +267,7 @@ module.exports = {
     hash: null,
   },
   clients: new Map(),
-  crashNumber: new Decimal("0.99"),
+  crashNumber: new Decimal("1.00"),
   streamCrash: "",
   streamTimer: "",
   speed: {
