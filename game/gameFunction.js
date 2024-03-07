@@ -224,6 +224,11 @@ module.exports = {
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(5);
+      } else if (this.crashNumber > 22.7 && this.speed.logic === 5) {
+        this.speed.logic = 4;
+        clearInterval(this.streamCrash);
+        this.broadcastCrash();
+        this.streamCrashF(4);
       } else {
         this.crashStreaming();
       }
