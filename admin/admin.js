@@ -2,6 +2,7 @@ const user = require("../model/user");
 const partnerWithdraw = require("../model/partnerWithdraw");
 const round = require("../model/round");
 const withdraw = require("../model/withdraw");
+const verifyPayout = require("../model/verifyPayout");
 const partner = require("../model/partner");
 const admin = require("../model/admin");
 const game = require("../game/gameFunction");
@@ -32,6 +33,106 @@ require("dotenv").config();
 // },
 
 module.exports = {
+  verifyPayout: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        if (!req.body.withdrawId) {
+          throw "Withdraw Id is required";
+        }
+        if (!req.body.code) {
+          throw "Code is required";
+        }
+        const withdrawId = req.body.withdrawId;
+        const code = req.body.code;
+        const getVerify = await verifyPayout.find({
+          withdrawId: withdrawId,
+          status: "unverified",
+        });
+        if (getVerify.length === 1) {
+          const dataNow = JSON.stringify({
+            email: process.env.NOW_USER,
+            password: process.env.NOW_PASS,
+          });
+
+          const configBV = {
+            method: "post",
+            maxBodyLength: Infinity,
+            url: "https://api.nowpayments.io/v1/auth",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            data: dataNow,
+          };
+
+          const responseDt = await axios(configBV);
+          if (!responseDt?.data?.token) {
+            throw "Token generation failed";
+          }
+
+          const data = JSON.stringify({
+            verification_code: code,
+          });
+
+          const config = {
+            method: "post",
+            maxBodyLength: Infinity,
+            url: `https://api.nowpayments.io/v1/payout/${withdrawId}/verify`,
+            headers: {
+              Authorization: `Bearer ${responseDt.data.token}`,
+              "x-api-key": process.env.NOW_API,
+              "Content-Type": "application/json",
+            },
+            data: data,
+          };
+
+          const response = await axios(config);
+          if (response.data) {
+            await verifyPayout.findByIdAndUpdate(getVerify[0]._id, {
+              $set: {
+                status: "verified",
+              },
+            });
+            res.status(200).send({
+              message: "Verification success",
+              data: {},
+            });
+          } else {
+            throw "did not get response.data";
+          }
+        } else {
+          throw "Not found any pending withdraw verify with that id";
+        }
+      }
+    } catch (message) {
+      let msg = message;
+      if (message?.response?.data?.message) {
+        msg = message.response.data.message;
+      }
+      res.status(409).send({
+        data: {},
+        message: msg,
+      });
+    }
+  },
+  dashboard: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        const getVerify = await verifyPayout.find({ status: "unverified" });
+
+        res.status(200).send({
+          message: "Admin dashbaord data",
+          data: getVerify,
+        });
+      }
+    } catch (message) {
+      res.status(409).send({
+        data: {},
+        message: message,
+      });
+    }
+  },
   sendAllPayments: async function (req, res) {
     try {
       const admin = await this.authAdmin(req);
@@ -114,6 +215,7 @@ module.exports = {
         const sent = await axios(config);
 
         if (sent.status === 200) {
+          await verifyPayout.create({ withdrawId: sent.data.id });
           await Promise.all(
             sent.data.withdrawals.forEach(async (data) => {
               await withdraw.findByIdAndUpdate(data.unique_external_id, {
@@ -236,6 +338,7 @@ module.exports = {
         const sent = await axios(config);
 
         if (sent.status === 200) {
+          await verifyPayout.create({ withdrawId: sent.data.id });
           await Promise.all(
             sent.data.withdrawals.forEach(async (data) => {
               await partnerWithdraw.findByIdAndUpdate(data.unique_external_id, {

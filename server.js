@@ -78,6 +78,14 @@ app.post("/admin/user-withdraw", (req, res) => {
 app.post("/admin/partner-withdraw", (req, res) => {
   admin.partnerWithdraw(req, res);
 });
+
+app.post("/admin/dashboard", (req, res) => {
+  admin.dashboard(req, res);
+});
+app.post("/admin/verifyPayout", (req, res) => {
+  admin.verifyPayout(req, res);
+});
+
 //admin end
 //partner
 app.post("/partner/register", (req, res) => {
