@@ -1,56 +1,189 @@
 const user = require("../model/user");
 const deposit = require("../model/deposit");
+const withdraw = require("../model/withdraw");
+const partnerWithdraw = require("../model/partnerWithdraw");
 const cryptoPrice = require("../model/cryptoPrice");
+const partner = require("../model/partner");
 const axios = require("axios");
 require("dotenv").config();
 module.exports = {
-  deposit: async function (res) {
-    const allDeposit = await deposit.aggregate([
-      { $match: { payment_status: "waiting" } }, // Match documents with payment_status equal to "waiting"
-      { $sample: { size: 10 } }, // Sample 10 random documents
-    ]);
+  withdraw: async function () {
+    try {
+      const allDeposit = await withdraw.aggregate([
+        { $match: { status: "Processing" } }, // Match documents with payment_status equal to "waiting"
+        { $sample: { size: 10 } }, // Sample 10 random documents
+      ]);
 
-    const counter = 0;
+      let counter = 0;
 
-    await allDeposit.forEach((deposit) => {
-      const config = {
-        method: "get",
-        maxBodyLength: Infinity,
-        url: `https://api.nowpayments.io/v1/payment/${deposit.payment_id}`,
-        headers: {
-          "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
-        },
-      };
+      await Promise.all(
+        allDeposit.map(async (deposit) => {
+          const config = {
+            method: "get",
+            maxBodyLength: Infinity,
+            url: `https://api.nowpayments.io/v1/payout/${deposit.payout_id}`,
+            headers: {
+              "x-api-key": process.env.NOW_API,
+            },
+          };
 
-      axios(config)
-        .then(async (response) => {
+          const response = await axios(config);
+
           const data = response.data;
-          if (data.payment_status === "finished") {
+          if (data.status === "FINISHED") {
+            await withdraw.findByIdAndUpdate(deposit._id, {
+              status: "finished",
+            });
+          }
+
+          if (data.status === "FAILED" || data.status === "REJECTED") {
             await user.findByIdAndUpdate(deposit.user_id, {
               $inc: {
-                [`balance.${deposit.pay_currency}`]: data.actually_paid,
+                [`balance.${deposit.payout_currency}`]: parseFloat(
+                  deposit.amount
+                ),
               },
             });
-            await user.findByIdAndUpdate(deposit._id, {
-              payment_status: data.payment_status,
-            });
-          } else {
-            await user.findByIdAndUpdate(deposit._id, {
-              payment_status: data.payment_status,
+
+            await withdraw.findByIdAndUpdate(deposit._id, {
+              status: "failed",
             });
           }
 
           counter++;
         })
-        .catch(function (error) {
-          console.log(error);
-        });
-    });
+      );
 
-    if (counter === 10) {
-      setTimeout(this.deposit, 300000);
-    } else {
-      console.log("Could not run the payment checkout cron successfully");
+      if (counter !== 0) {
+        console.log("checking in 5 minutes :)");
+        setTimeout(() => {
+          this.withdraw();
+        }, 300000);
+      } else {
+        console.log("All Withdraw Clear :)");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  partnerWithdraw: async function () {
+    try {
+      const allDeposit = await partnerWithdraw.aggregate([
+        { $match: { status: "Processing" } }, // Match documents with payment_status equal to "waiting"
+        { $sample: { size: 10 } }, // Sample 10 random documents
+      ]);
+
+      let counter = 0;
+
+      await Promise.all(
+        allDeposit.map(async (deposit) => {
+          const config = {
+            method: "get",
+            maxBodyLength: Infinity,
+            url: `https://api.nowpayments.io/v1/payout/${deposit.payout_id}`,
+            headers: {
+              "x-api-key": process.env.NOW_API,
+            },
+          };
+
+          const response = await axios(config);
+          const data = response.data.withdrawals[0];
+          if (data.status === "FINISHED") {
+            await partnerWithdraw.findByIdAndUpdate(deposit._id, {
+              status: "finished",
+            });
+          }
+
+          if (data.status === "FAILED" || data.status === "REJECTED") {
+            await partner.findByIdAndUpdate(deposit.partnerId, {
+              $inc: {
+                [`balance.${deposit.payoutCurrency}`]: parseFloat(
+                  deposit.amount
+                ),
+              },
+            });
+            const ope = await partnerWithdraw.findByIdAndUpdate(deposit._id, {
+              status: "failed",
+            });
+          }
+
+          counter++;
+        })
+      );
+
+      if (counter !== 0) {
+        console.log("checking in 5 minutes :)");
+        setTimeout(() => {
+          this.partnerWithdraw();
+        }, 300000);
+      } else {
+        console.log("All Partner Withdraw Clear :)");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  deposit: async function () {
+    try {
+      const allDeposit = await deposit.aggregate([
+        { $match: { payment_status: "waiting" } }, // Match documents with payment_status equal to "waiting"
+        { $sample: { size: 10 } }, // Sample 10 random documents
+      ]);
+
+      let counter = 0;
+
+      await Promise.all(
+        allDeposit.map(async (depositData) => {
+          const config = {
+            method: "get",
+            maxBodyLength: Infinity,
+            url: `https://api.nowpayments.io/v1/payment/${depositData.payment_id}`,
+            headers: {
+              "x-api-key": process.env.NOW_API,
+            },
+          };
+
+          const response = await axios(config);
+
+          const data = response.data;
+          if (data.payment_status === "finished") {
+            await deposit.findByIdAndUpdate(depositData.user_id, {
+              $inc: {
+                [`balance.${depositData.pay_currency}`]: parseFloat(
+                  data.actually_paid
+                ),
+              },
+            });
+            await deposit.findByIdAndUpdate(depositData._id, {
+              payment_status: data.payment_status,
+              pay_amount: data.actually_paid,
+            });
+          }
+
+          if (
+            data.payment_status === "refunded" ||
+            data.payment_status === "failed" ||
+            data.payment_status === "expired"
+          ) {
+            await deposit.findByIdAndUpdate(depositData._id, {
+              payment_status: "failed",
+            });
+          }
+
+          counter++;
+        })
+      );
+
+      if (counter !== 0) {
+        console.log("checking deposit in 5 minutes :)");
+        setTimeout(() => {
+          this.deposit();
+        }, 300000);
+      } else {
+        console.log("All Deposit Clear :)");
+      }
+    } catch (error) {
+      console.log(error);
     }
   },
 
@@ -67,6 +200,7 @@ module.exports = {
           "x-api-key": process.env.NOW_API,
         },
       };
+      timer += timerIncreaseValue;
       setTimeout(async () => {
         const response = await axios(config);
         const findCoin = await cryptoPrice.find({ name: coin });
@@ -88,14 +222,14 @@ module.exports = {
             }
           );
         }
+        console.log(`${coin} price updated`);
 
         timer -= timerIncreaseValue;
+
         if (timer === 0) {
           this.cryptoPrice();
         }
       }, timer);
-
-      timer += timerIncreaseValue;
     });
   },
 };

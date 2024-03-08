@@ -253,11 +253,11 @@ module.exports = {
           });
           return;
         }
-        await partner.findByIdAndUpdate(getUser[0]._id, {
-          $inc: {
-            [`balance.${coin}`]: -amount,
-          },
-        });
+        // await partner.findByIdAndUpdate(getUser[0]._id, {
+        //   $inc: {
+        //     [`balance.${coin}`]: -amount,
+        //   },
+        // });
         await partnerWithdraw.create({
           status: "In Progress",
           partnerId: getUser[0]._id,

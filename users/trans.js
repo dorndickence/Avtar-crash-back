@@ -59,7 +59,7 @@ module.exports = {
         maxBodyLength: Infinity,
         url: `https://api.nowpayments.io/v1/payment/${depositArg.payment_id}`,
         headers: {
-          "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+          "x-api-key": process.env.NOW_API,
         },
       };
 
@@ -204,7 +204,7 @@ module.exports = {
       maxBodyLength: Infinity,
       url: `https://api.nowpayments.io/v1/payout-withdrawal/min-amount/${coin}`,
       headers: {
-        "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+        "x-api-key": process.env.NOW_API,
       },
     };
 
@@ -319,7 +319,7 @@ module.exports = {
         maxBodyLength: Infinity,
         url: `https://api.nowpayments.io/v1/min-amount?currency_from=${coin}&currency_to=usd&fiat_equivalent=${coin}&is_fixed_rate=False&is_fee_paid_by_user=False`,
         headers: {
-          "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+          "x-api-key": process.env.NOW_API,
         },
       };
 
@@ -354,6 +354,7 @@ module.exports = {
       pay_currency: coin,
       order_id: getUser[0]._id,
       order_description: "Topup Coin",
+      ipn_callback_url: process.env.NOW_USER_DEPOSIT_NOTIFY,
     });
 
     let config = {
@@ -361,7 +362,7 @@ module.exports = {
       maxBodyLength: Infinity,
       url: "https://api.nowpayments.io/v1/payment",
       headers: {
-        "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+        "x-api-key": process.env.NOW_API,
         "Content-Type": "application/json",
       },
       data: data,
@@ -402,7 +403,7 @@ module.exports = {
       maxBodyLength: Infinity,
       url: `https://api.nowpayments.io/v1/estimate?amount=${amount}&currency_from=usd&currency_to=${coin}`,
       headers: {
-        "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+        "x-api-key": process.env.NOW_API,
       },
     };
 

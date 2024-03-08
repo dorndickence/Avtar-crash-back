@@ -15,6 +15,9 @@ const livebet = require("./users/livebet");
 const trans = require("./users/trans");
 const history = require("./users/history");
 const cron = require("./users/cron");
+const deposit_ipn = require("./ipn/deposit");
+const withdraw_ipn = require("./ipn/withdraw");
+const partnerWithdraw_ipn = require("./ipn/partnerWithdraw");
 app.use(
   cors({
     origin: "*",
@@ -34,7 +37,10 @@ async function connect() {
     if (connected) {
       game.streamCrashF();
       console.log("connected mongo");
-      // cron.cryptoPrice();
+      // cron.partnerWithdraw();
+      // cron.withdraw();
+      cron.cryptoPrice();
+      // cron.deposit();
     }
   } catch (error) {
     console.log("can't connect mongo");
@@ -45,12 +51,32 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.post("/deposit_ipn", (req) => {
+  deposit_ipn.deposit(req);
+});
+
+app.post("/withdraw_ipn", (req) => {
+  withdraw_ipn.withdraw(req);
+});
+app.post("/partnerWithdraw_ipn", (req) => {
+  partnerWithdraw_ipn.partnerWithdraw(req);
+});
+
 //admin
 app.post("/admin/login", (req, res) => {
   admin.login(req, res);
 });
+app.post("/admin/sendAllPayments", (req, res) => {
+  admin.sendAllPayments(req, res);
+});
+app.post("/admin/sendAllPartnerPayments", (req, res) => {
+  admin.sendAllPartnerPayments(req, res);
+});
 app.post("/admin/user-withdraw", (req, res) => {
   admin.userWithdraw(req, res);
+});
+app.post("/admin/partner-withdraw", (req, res) => {
+  admin.partnerWithdraw(req, res);
 });
 //admin end
 //partner
@@ -163,6 +189,6 @@ io.on("error", (error) => {
 // }
 connect();
 
-server.listen(3001, () => {
+server.listen(3000, () => {
   console.log("Server is running on port 3001");
 });

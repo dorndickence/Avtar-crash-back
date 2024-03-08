@@ -9,7 +9,269 @@ const axios = require("axios");
 const cryptoPrice = require("../model/cryptoPrice");
 const decimal = require("decimal.js");
 require("dotenv").config();
+
+// sendAllPayments: async function () {
+//   try {
+//     const admin = await this.authAdmin(req);
+//     if (admin) {
+//       Wrtie here
+
+// res.status(200).send({
+//   message: "User Withdraw History",
+//   success: false,
+//   data: history,
+//   totalPages: totalArray,
+// });
+//     }
+//   } catch (message) {
+//     res.status(409).send({
+//       data: {},
+//       message: message,
+//     });
+//   }
+// },
+
 module.exports = {
+  sendAllPayments: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        const dataNow = JSON.stringify({
+          email: process.env.NOW_USER,
+          password: process.env.NOW_PASS,
+        });
+
+        const configBV = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: "https://api.nowpayments.io/v1/auth",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: dataNow,
+        };
+
+        const response = await axios(configBV);
+        if (!response?.data?.token) {
+          throw "Token generation failed";
+        }
+
+        const allWithdraw = await withdraw.find({ status: "In Progress" });
+
+        const allAddress = await Promise.all(
+          allWithdraw.map(async (singleWithdraw) => {
+            const getUser = await user.find({ _id: singleWithdraw.user_id });
+            if (
+              parseFloat(getUser[0].balance[singleWithdraw.payout_currency]) >
+              parseFloat(singleWithdraw.amount)
+            ) {
+              await withdraw.findByIdAndUpdate(singleWithdraw._id, {
+                $set: {
+                  status: "Processing",
+                },
+              });
+              await user.findByIdAndUpdate(singleWithdraw.user_id, {
+                $inc: {
+                  [`balance.${singleWithdraw.payout_currency}`]: -parseFloat(
+                    singleWithdraw.amount
+                  ),
+                },
+              });
+              const single = {
+                address: singleWithdraw.account,
+                currency: singleWithdraw.payout_currency,
+                amount: parseFloat(singleWithdraw.amount).toFixed(6),
+                unique_external_id: singleWithdraw._id,
+                ipn_callback_url: process.env.NOW_USER_WITHDRAW_NOTIFY,
+              };
+              return single;
+            } else {
+              await withdraw.findByIdAndUpdate(singleWithdraw._id, {
+                $set: {
+                  status: "Failed",
+                },
+              });
+            }
+          })
+        );
+
+        const data = JSON.stringify({
+          withdrawals: allAddress,
+        });
+
+        const config = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: "https://api.nowpayments.io/v1/payout",
+          headers: {
+            Authorization: `Bearer ${response.data.token}`,
+            "x-api-key": process.env.NOW_API,
+            "Content-Type": "application/json",
+          },
+          data: data,
+        };
+
+        const sent = await axios(config);
+
+        if (sent.status === 200) {
+          await Promise.all(
+            sent.data.withdrawals.forEach(async (data) => {
+              await withdraw.findByIdAndUpdate(data.unique_external_id, {
+                $set: {
+                  payout_id: data.id,
+                },
+              });
+            })
+          );
+
+          res.status(200).send({
+            message: "Sent all payments",
+            data: [],
+          });
+        } else {
+          res.status(503).send({
+            message: "Did not sent the payments",
+            data: [],
+          });
+        }
+      }
+    } catch (message) {
+      // console.log(message);
+      if (message?.response?.data) {
+        res.status(403).send({
+          data: message.response.data.code,
+          message: message.response.data.message,
+        });
+      } else {
+        res.status(409).send({
+          data: {},
+          message: message,
+        });
+      }
+    }
+  },
+  sendAllPartnerPayments: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        const dataNow = JSON.stringify({
+          email: process.env.NOW_USER,
+          password: process.env.NOW_PASS,
+        });
+
+        const configBV = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: "https://api.nowpayments.io/v1/auth",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: dataNow,
+        };
+
+        const response = await axios(configBV);
+        if (!response?.data?.token) {
+          throw "Token generation failed";
+        }
+
+        const allWithdraw = await partnerWithdraw.find({
+          status: "In Progress",
+        });
+
+        const allAddress = await Promise.all(
+          allWithdraw.map(async (singleWithdraw) => {
+            const getUser = await partner.find({
+              _id: singleWithdraw.partnerId,
+            });
+            if (
+              parseFloat(getUser[0].balance[singleWithdraw.payoutCurrency]) >
+              parseFloat(singleWithdraw.amount)
+            ) {
+              await partnerWithdraw.findByIdAndUpdate(singleWithdraw._id, {
+                $set: {
+                  status: "Processing",
+                },
+              });
+              await partner.findByIdAndUpdate(singleWithdraw.partnerId, {
+                $inc: {
+                  [`balance.${singleWithdraw.payoutCurrency}`]: -parseFloat(
+                    singleWithdraw.amount
+                  ),
+                },
+              });
+              const single = {
+                address: singleWithdraw.account,
+                currency: singleWithdraw.payoutCurrency,
+                amount: parseFloat(singleWithdraw.amount).toFixed(6),
+                unique_external_id: singleWithdraw._id,
+                ipn_callback_url: process.env.NOW_PARTNER_WITHDRAW_NOTIFY,
+              };
+              return single;
+            } else {
+              await partnerWithdraw.findByIdAndUpdate(singleWithdraw._id, {
+                $set: {
+                  status: "Failed",
+                },
+              });
+            }
+          })
+        );
+
+        const data = JSON.stringify({
+          withdrawals: allAddress,
+        });
+
+        const config = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: "https://api.nowpayments.io/v1/payout",
+          headers: {
+            Authorization: `Bearer ${response.data.token}`,
+            "x-api-key": process.env.NOW_API,
+            "Content-Type": "application/json",
+          },
+          data: data,
+        };
+
+        const sent = await axios(config);
+
+        if (sent.status === 200) {
+          await Promise.all(
+            sent.data.withdrawals.forEach(async (data) => {
+              await partnerWithdraw.findByIdAndUpdate(data.unique_external_id, {
+                $set: {
+                  payout_id: data.id,
+                },
+              });
+            })
+          );
+
+          res.status(200).send({
+            message: "Sent all payments",
+            data: [],
+          });
+        } else {
+          res.status(503).send({
+            message: "Did not sent the payments",
+            data: [],
+          });
+        }
+      }
+    } catch (message) {
+      console.log(message);
+      if (message?.response?.data) {
+        res.status(403).send({
+          data: message.response.data.code,
+          message: message.response.data.message,
+        });
+      } else {
+        res.status(409).send({
+          data: {},
+          message: message,
+        });
+      }
+    }
+  },
   userWithdraw: async function (req, res) {
     try {
       const admin = await this.authAdmin(req);
@@ -46,6 +308,55 @@ module.exports = {
 
         res.status(200).send({
           message: "User Withdraw History",
+          success: false,
+          data: history,
+          totalPages: totalArray,
+        });
+      }
+    } catch (message) {
+      res.status(409).send({
+        data: {},
+        message: message,
+        success: false,
+      });
+    }
+  },
+  partnerWithdraw: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        const type = req.body.type || "all";
+
+        const searchObject = {};
+
+        if (type !== "all") {
+          searchObject.status = type;
+        }
+
+        const historyAll = await partnerWithdraw.find(searchObject);
+
+        const perPageData = 20;
+        const requestedPage = req.body.page || 0;
+
+        let requestedPageNumber = parseInt(requestedPage);
+        let skip = perPageData * requestedPageNumber;
+        if (requestedPageNumber === 0) {
+          skip = 0;
+        }
+
+        const total = Math.ceil(historyAll.length / 20);
+        const totalArray = [];
+        for (i = 1; i <= total; i++) {
+          totalArray.push(i);
+        }
+        const history = await partnerWithdraw
+          .find(searchObject)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(perPageData);
+
+        res.status(200).send({
+          message: "Partner Withdraw History",
           success: false,
           data: history,
           totalPages: totalArray,
