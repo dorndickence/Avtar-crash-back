@@ -142,7 +142,7 @@ module.exports = {
         }
         res.status(200).send({
           message: "Signal Verified",
-          data: game.crashNumber,
+          data: game.thisRound.crash,
         });
       }
     } catch (message) {
