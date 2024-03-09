@@ -188,7 +188,7 @@ module.exports = {
             } else {
               await withdraw.findByIdAndUpdate(singleWithdraw._id, {
                 $set: {
-                  status: "Failed",
+                  status: "failed",
                 },
               });
             }
@@ -216,7 +216,7 @@ module.exports = {
         if (sent.status === 200) {
           await verifyPayout.create({ withdrawId: sent.data.id });
           await Promise.all(
-            sent.data.withdrawals.forEach(async (data) => {
+            sent.data.withdrawals.map(async (data) => {
               await withdraw.findByIdAndUpdate(data.unique_external_id, {
                 $set: {
                   payout_id: data.id,
@@ -310,7 +310,7 @@ module.exports = {
             } else {
               await partnerWithdraw.findByIdAndUpdate(singleWithdraw._id, {
                 $set: {
-                  status: "Failed",
+                  status: "failed",
                 },
               });
             }
@@ -338,7 +338,7 @@ module.exports = {
         if (sent.status === 200) {
           await verifyPayout.create({ withdrawId: sent.data.id });
           await Promise.all(
-            sent.data.withdrawals.forEach(async (data) => {
+            sent.data.withdrawals.map(async (data) => {
               await partnerWithdraw.findByIdAndUpdate(data.unique_external_id, {
                 $set: {
                   payout_id: data.id,
