@@ -318,15 +318,15 @@ module.exports = {
             privateUsername: player.privateUsername,
           });
           const totalBet = getAllGames.reduce(
-            (acumulator, singleGame) =>
+            async (acumulator, singleGame) =>
               acumulator +
-              this.convertToUSD(singleGame.currency, singleGame.amount),
+              (await this.convertToUSD(singleGame.currency, singleGame.amount)),
             0
           );
           const totalWin = getAllGames.reduce(
-            (acumulator, singleGame) =>
+            async (acumulator, singleGame) =>
               acumulator +
-              this.convertToUSD(singleGame.currency, singleGame.win),
+              (await this.convertToUSD(singleGame.currency, singleGame.win)),
             0
           );
 
