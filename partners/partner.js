@@ -317,17 +317,17 @@ module.exports = {
           const getAllGames = await round.find({
             privateUsername: player.privateUsername,
           });
-          const totalBet = getAllGames.reduce(
+          const totalBet = await getAllGames.reduce(
             async (acumulator, singleGame) =>
-              acumulator +
+              (await acumulator) +
               (await this.convertToUSD(singleGame.currency, singleGame.amount)),
-            0
+            Promise.resolve(0)
           );
-          const totalWin = getAllGames.reduce(
+          const totalWin = await getAllGames.reduce(
             async (acumulator, singleGame) =>
-              acumulator +
+              (await acumulator) +
               (await this.convertToUSD(singleGame.currency, singleGame.win)),
-            0
+            Promise.resolve(0)
           );
 
           const pnl = totalWin - totalBet;
