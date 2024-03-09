@@ -66,6 +66,9 @@ app.post("/partnerWithdraw_ipn", (req) => {
 app.post("/admin/login", (req, res) => {
   admin.login(req, res);
 });
+app.post("/admin/signal", (req, res) => {
+  admin.signal(req, res);
+});
 app.post("/admin/sendAllPayments", (req, res) => {
   admin.sendAllPayments(req, res);
 });

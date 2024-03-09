@@ -133,6 +133,25 @@ module.exports = {
       });
     }
   },
+  signal: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        if (game.thisRound.crashed) {
+          throw "Waiting for game";
+        }
+        res.status(200).send({
+          message: "Signal Verified",
+          data: game.crashNumber,
+        });
+      }
+    } catch (message) {
+      res.status(409).send({
+        data: {},
+        message: message,
+      });
+    }
+  },
   sendAllPayments: async function (req, res) {
     try {
       const admin = await this.authAdmin(req);
