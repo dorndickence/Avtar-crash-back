@@ -4,6 +4,7 @@ const round = require("../model/round");
 const cryptoPrice = require("../model/cryptoPrice");
 const partner = require("../model/partner");
 const nodemailer = require("nodemailer");
+const { mongoose } = require("mongoose");
 require("dotenv").config();
 module.exports = {
   password: async function (req, res) {
@@ -378,9 +379,13 @@ module.exports = {
         return;
       }
 
+      const actuallyPaidDecimal = mongoose.Types.Decimal128.fromString(
+        amount.toString()
+      );
+
       await user.findByIdAndUpdate(getUser[0]._id, {
         $inc: {
-          [`balance.${currency}`]: -amount,
+          [`balance.${currency}`]: -actuallyPaidDecimal,
         },
       });
 
@@ -388,9 +393,14 @@ module.exports = {
         const partnerCommisssion = parseFloat(
           (amount / 100) * process.env.PARTNER_PERCENT
         );
+
+        const actuallyPaidDecimal2 = mongoose.Types.Decimal128.fromString(
+          partnerCommisssion.toString()
+        );
+
         await partner.findByIdAndUpdate(partnerId, {
           $inc: {
-            [`balance.${currency}`]: partnerCommisssion,
+            [`balance.${currency}`]: actuallyPaidDecimal2,
           },
         });
       }
@@ -548,11 +558,15 @@ module.exports = {
       // game.broadcast({ type: "betData", betData: betData });
 
       cashoutOdds = game.crashNumber;
-      winAmount = cashoutOdds * getRound[0].amount;
+      winAmount = cashoutOdds * parseFloat(getRound[0].amount);
+
+      const actuallyPaidDecimal = mongoose.Types.Decimal128.fromString(
+        winAmount.toString()
+      );
 
       await user.findByIdAndUpdate(getUser[0]._id, {
         $inc: {
-          [`balance.${currency}`]: parseFloat(winAmount),
+          [`balance.${currency}`]: actuallyPaidDecimal,
         },
       });
 
@@ -571,12 +585,15 @@ module.exports = {
       );
 
       if (partnerId !== undefined && partnerId !== null) {
-        const partnerCommisssion = parseFloat(
-          (winAmount / 100) * process.env.PARTNER_PERCENT
+        const partnerCommisssion =
+          (winAmount / 100) * process.env.PARTNER_PERCENT;
+        const actuallyPaidDecimal2 = mongoose.Types.Decimal128.fromString(
+          partnerCommisssion.toString()
         );
+
         await partner.findByIdAndUpdate(partnerId, {
           $inc: {
-            [`balance.${currency}`]: -partnerCommisssion,
+            [`balance.${currency}`]: -actuallyPaidDecimal2,
           },
         });
       }
