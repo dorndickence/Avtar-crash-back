@@ -281,6 +281,10 @@ module.exports = {
         });
       });
   },
+  convertToUSD: async function (currency, amount) {
+    const oneCryptoToUSD = await cryptoPrice.find({ name: currency });
+    return parseFloat(amount) * parseFloat(oneCryptoToUSD[0].value);
+  },
   players: async function (req, res) {
     try {
       const getPartner = await this.authPartner(req, res);
@@ -315,11 +319,14 @@ module.exports = {
           });
           const totalBet = getAllGames.reduce(
             (acumulator, singleGame) =>
-              acumulator + parseFloat(singleGame.amount),
+              acumulator +
+              this.convertToUSD(singleGame.currency, singleGame.amount),
             0
           );
           const totalWin = getAllGames.reduce(
-            (acumulator, singleGame) => acumulator + parseFloat(singleGame.win),
+            (acumulator, singleGame) =>
+              acumulator +
+              this.convertToUSD(singleGame.currency, singleGame.win),
             0
           );
 
