@@ -18,7 +18,7 @@ module.exports = {
         getDeposit[0].payment_status !== "finished"
       ) {
         const actuallyPaidDecimal = mongoose.Types.Decimal128.fromString(
-          data.actually_paid
+          parseFloat(data.actually_paid).toString()
         );
         await user.findByIdAndUpdate(getDeposit[0].user_id, {
           $inc: {
