@@ -20,7 +20,7 @@ const withdraw_ipn = require("./ipn/withdraw");
 const partnerWithdraw_ipn = require("./ipn/partnerWithdraw");
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.CORS,
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })
