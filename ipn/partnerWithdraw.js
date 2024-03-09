@@ -19,12 +19,13 @@ module.exports = {
         });
       }
 
-      if (data.status === "FAILED" || data.status === "REJECTED") {
+      if (
+        getDeposit[0].status !== "failed" &&
+        (data.status === "FAILED" || data.status === "REJECTED")
+      ) {
         await partner.findByIdAndUpdate(getDeposit[0].partnerId, {
           $inc: {
-            [`balance.${getDeposit[0].payoutCurrency}`]: parseFloat(
-              getDeposit[0].amount
-            ),
+            [`balance.${getDeposit[0].payoutCurrency}`]: getDeposit[0].amount,
           },
         });
 

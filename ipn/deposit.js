@@ -1,7 +1,7 @@
 const user = require("../model/user");
 const deposit = require("../model/deposit");
 const crypto = require("crypto");
-
+const { mongoose } = require("mongoose");
 require("dotenv").config();
 //ooyzahNyYpT97hR6otAHG1tpu2Czuh2j
 module.exports = {
@@ -13,12 +13,16 @@ module.exports = {
     if (signature === req.headers["x-nowpayments-sig"]) {
       const data = req.body;
       const getDeposit = await deposit.find({ payment_id: data.payment_id });
-      if (data.payment_status === "finished") {
+      if (
+        data.payment_status === "finished" &&
+        getDeposit[0].payment_status !== "finished"
+      ) {
+        const actuallyPaidDecimal = mongoose.Types.Decimal128.fromString(
+          data.actually_paid
+        );
         await user.findByIdAndUpdate(getDeposit[0].user_id, {
           $inc: {
-            [`balance.${getDeposit[0].pay_currency}`]: parseFloat(
-              data.actually_paid
-            ),
+            [`balance.${getDeposit[0].pay_currency}`]: actuallyPaidDecimal,
           },
         });
         await deposit.findByIdAndUpdate(getDeposit[0]._id, {

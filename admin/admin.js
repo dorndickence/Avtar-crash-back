@@ -173,9 +173,8 @@ module.exports = {
               });
               await user.findByIdAndUpdate(singleWithdraw.user_id, {
                 $inc: {
-                  [`balance.${singleWithdraw.payout_currency}`]: -parseFloat(
-                    singleWithdraw.amount
-                  ),
+                  [`balance.${singleWithdraw.payout_currency}`]:
+                    -singleWithdraw.amount,
                 },
               });
               const single = {
@@ -296,9 +295,8 @@ module.exports = {
               });
               await partner.findByIdAndUpdate(singleWithdraw.partnerId, {
                 $inc: {
-                  [`balance.${singleWithdraw.payoutCurrency}`]: -parseFloat(
-                    singleWithdraw.amount
-                  ),
+                  [`balance.${singleWithdraw.payoutCurrency}`]:
+                    -singleWithdraw.amount,
                 },
               });
               const single = {

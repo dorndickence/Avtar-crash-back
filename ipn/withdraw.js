@@ -19,12 +19,13 @@ module.exports = {
         });
       }
 
-      if (data.status === "FAILED" || data.status === "REJECTED") {
+      if (
+        getDeposit[0].status !== "failed" &&
+        (data.status === "FAILED" || data.status === "REJECTED")
+      ) {
         await user.findByIdAndUpdate(getDeposit[0].user_id, {
           $inc: {
-            [`balance.${getDeposit[0].payout_currency}`]: parseFloat(
-              getDeposit[0].amount
-            ),
+            [`balance.${getDeposit[0].payout_currency}`]: getDeposit[0].amount,
           },
         });
 

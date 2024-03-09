@@ -456,7 +456,7 @@ module.exports = {
         return;
       }
       const getPartneredUser = await user.find({ partnerId: getUser[0]._id });
-      const balance = getUser[0].balance;
+      const balance = getUser[0].balance || [];
       let totalUsd = 0;
 
       await Promise.all(
