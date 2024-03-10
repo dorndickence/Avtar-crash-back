@@ -188,48 +188,52 @@ module.exports = {
   },
 
   cryptoPrice: async function () {
-    const currency = ["usdttrc20", "trx", "dai", "sol"];
-    let timer = 0;
-    const timerIncreaseValue = 3600000;
-    currency.forEach(async (coin) => {
-      const config = {
-        method: "get",
-        maxBodyLength: Infinity,
-        url: `https://api.nowpayments.io/v1/estimate?amount=1&currency_from=${coin}&currency_to=usd`,
-        headers: {
-          "x-api-key": process.env.NOW_API,
-        },
-      };
-      timer += timerIncreaseValue;
-      setTimeout(async () => {
-        const response = await axios(config);
-        const findCoin = await cryptoPrice.find({ name: coin });
-        if (findCoin.length === 0) {
-          await cryptoPrice.create({
-            name: coin,
-            value: parseFloat(response.data.estimated_amount),
-          });
-        } else {
-          await cryptoPrice.updateOne(
-            {
+    try {
+      const currency = ["usdttrc20", "trx", "dai", "sol"];
+      let timer = 0;
+      const timerIncreaseValue = 3600000;
+      currency.forEach(async (coin) => {
+        const config = {
+          method: "get",
+          maxBodyLength: Infinity,
+          url: `https://api.nowpayments.io/v1/estimate?amount=1&currency_from=${coin}&currency_to=usd`,
+          headers: {
+            "x-api-key": process.env.NOW_API,
+          },
+        };
+        timer += timerIncreaseValue;
+        setTimeout(async () => {
+          const response = await axios(config);
+          const findCoin = await cryptoPrice.find({ name: coin });
+          if (findCoin.length === 0) {
+            await cryptoPrice.create({
               name: coin,
-            },
-            {
-              $set: {
-                value: parseFloat(response.data.estimated_amount),
-                updatedAt: new Date(),
+              value: parseFloat(response.data.estimated_amount),
+            });
+          } else {
+            await cryptoPrice.updateOne(
+              {
+                name: coin,
               },
-            }
-          );
-        }
-        console.log(`${coin} price updated`);
+              {
+                $set: {
+                  value: parseFloat(response.data.estimated_amount),
+                  updatedAt: new Date(),
+                },
+              }
+            );
+          }
+          console.log(`${coin} price updated`);
 
-        timer -= timerIncreaseValue;
+          timer -= timerIncreaseValue;
 
-        if (timer === 0) {
-          this.cryptoPrice();
-        }
-      }, timer);
-    });
+          if (timer === 0) {
+            this.cryptoPrice();
+          }
+        }, timer);
+      });
+    } catch (error) {
+      console.log("Failed to retrive crypto price");
+    }
   },
 };
