@@ -506,7 +506,7 @@ module.exports = {
   register: async function (req, res) {
     try {
       const userEmail = req.body.email.toLowerCase();
-      const username = req.body.username;
+      const username = req.body.username.toLowerCase();
       const contact = req.body.contact;
       const contactMethod = req.body.contactMethod;
       const howFindUs = req.body.howFindUs;
