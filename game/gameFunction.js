@@ -118,7 +118,6 @@ module.exports = {
       const decimalPlaces = 2;
       const randomNumber = this.getRandomNumber(min, max, decimalPlaces, array); // Use this.getRandomNumber() to reference the getRandomNumber function
 
-      this.thisRound.crashed = false;
       // broadcast({ type: "crashed", crashed: thisRound.crashed });
       // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
       this.thisRound.crash = randomNumber;
@@ -258,6 +257,7 @@ module.exports = {
         this.streamCrashF();
         this.timer = -1;
         this.crashNumber = new Decimal("1.00");
+        this.thisRound.crashed = false;
       }
     }, 600);
   },
