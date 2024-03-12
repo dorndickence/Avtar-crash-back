@@ -1,8 +1,9 @@
 const { Decimal } = require("decimal.js");
 const CryptoJS = require("crypto-js");
 const WebSocket = require("ws");
-
+const fakeGame = require("./fakeGameData");
 const round = require("../model/round");
+const cryptoPrice = require("../model/cryptoPrice");
 
 module.exports = {
   broadcast: function (message, singleSocket = null) {
@@ -174,6 +175,7 @@ module.exports = {
 
       // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
       this.generateRandomCrash();
+      fakeGame.gameData = [];
       this.streamTimerF();
     } else {
       if (this.speed.logic === 1) {
@@ -183,47 +185,55 @@ module.exports = {
         this.broadcastCrash();
       } else if (this.crashNumber > 1.3 && this.speed.logic === 120) {
         // this.speed.use = "0.01";
+        this.fakeGameWin();
         this.speed.logic = 100;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(100);
       } else if (this.crashNumber > 1.6 && this.speed.logic === 100) {
         // this.speed.use = "0.01";
+        this.fakeGameWin();
         this.speed.logic = 80;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(80);
       } else if (this.crashNumber > 2.1 && this.speed.logic === 80) {
         // this.speed.use = "0.03";
+        this.fakeGameWin();
         this.speed.logic = 60;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(60);
       } else if (this.crashNumber > 3.7 && this.speed.logic === 60) {
         // this.speed.use = "0.06";
+        this.fakeGameWin();
         this.speed.logic = 40;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(40);
       } else if (this.crashNumber > 5.7 && this.speed.logic === 40) {
         // this.speed.use = "0.07";
+        this.fakeGameWin();
         this.speed.logic = 20;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(20);
       } else if (this.crashNumber > 10.7 && this.speed.logic === 20) {
         // this.speed.use = "0.08";
+        this.fakeGameWin();
         this.speed.logic = 10;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(10);
       } else if (this.crashNumber > 15.7 && this.speed.logic === 10) {
         // this.speed.use = "0.15";
+        this.fakeGameWin();
         this.speed.logic = 5;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(5);
       } else if (this.crashNumber > 22.7 && this.speed.logic === 5) {
+        this.fakeGameWin();
         this.speed.logic = 4;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
@@ -251,6 +261,9 @@ module.exports = {
       this.broadcast({ type: "timer", timer: timer });
       // this.broadcast({ type: "betData", betData: this.betData });
       // io.emit("timer", encrypt({ timer: timer }));
+      if (timer > 2) {
+        this.fakeGameStart();
+      }
       if (timer >= 11) {
         clearInterval(this.streamTimer);
         this.betTime = false;
@@ -261,6 +274,62 @@ module.exports = {
         this.streamCrashF();
       }
     }, 600);
+  },
+
+  fakeGameStart: async function () {
+    for (let index = 0; index < Math.round(Math.random() * 10); index++) {
+      const name = fakeGame.randomNames();
+      const currency = fakeGame.currency();
+      const amount = fakeGame.randomAmount(currency);
+      const oneCryptoInUSD = await cryptoPrice.find({ name: currency });
+      const amountInUSD = parseFloat(oneCryptoInUSD[0].value) * amount;
+      const sendDataGlobal = {
+        amount: amount,
+        amountInUSD: amountInUSD.toFixed(2),
+        publicUsername: name,
+        currency: currency,
+        win: 0,
+        winInUSD: 0,
+        odds: 0,
+        _id: name,
+      };
+      fakeGame.gameData.push(sendDataGlobal);
+      this.broadcast({ type: "betData", betData: sendDataGlobal });
+    }
+  },
+  fakeGameWin: async function () {
+    const random = Math.round(
+      (Math.random() * (fakeGame.gameData.length - 1)) / 4
+    );
+    let counter = 0;
+    for (let index = 0; index < random; index++) {
+      const random = Math.round(Math.random() * (fakeGame.gameData.length - 1));
+      Math.round(Math.random() * (fakeGame.gameData.length - 1));
+      const onegame = fakeGame.gameData[random];
+      if (onegame?.win === 0) {
+        setTimeout(async () => {
+          const odds = this.crashNumber;
+          const winAmount = onegame.amount * odds;
+          const oneCryptoInUSD = await cryptoPrice.find({
+            name: onegame.currency,
+          });
+          const amountInUSD = parseFloat(oneCryptoInUSD[0].value) * winAmount;
+          onegame.win = winAmount;
+          onegame.winInUSD = amountInUSD;
+          if (!this.thisRound.crashed) {
+            this.broadcast({
+              type: "winData",
+              _id: onegame._id,
+              amount: winAmount.toFixed(8),
+              amountInUSD: amountInUSD.toFixed(2),
+              currency: onegame.currency,
+              odds: odds,
+            });
+          }
+        }, counter);
+        counter += 1000;
+      }
+    }
   },
   thisRound: {
     crash: 0,

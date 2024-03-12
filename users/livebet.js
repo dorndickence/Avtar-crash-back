@@ -1,6 +1,7 @@
 const game = require("../game/gameFunction");
 const round = require("../model/round");
 const user = require("../model/user");
+const fakeGame = require("../game/fakeGameData");
 module.exports = {
   getlivebet: async function (req, res) {
     try {
@@ -20,7 +21,8 @@ module.exports = {
         }
       }
 
-      Allgames = await round.find({ hash: game.thisRound.hash });
+      let Allgames = await round.find({ hash: game.thisRound.hash });
+      Allgames = [...Allgames, ...fakeGame.gameData];
 
       let winnings = 0,
         bets = 0;

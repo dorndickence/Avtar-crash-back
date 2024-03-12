@@ -183,6 +183,7 @@ io.on("connection", async (socket, req) => {
   if (!game.thisRound.crashed) {
     game.broadcastCrash(socket);
   }
+  // game.fakeGameInitial();
   // console.log(Array.from(game.clients.keys()));
   socket.on("close", function close() {
     // Remove the WebSocket connection from the set
