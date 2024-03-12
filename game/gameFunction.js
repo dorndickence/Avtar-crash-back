@@ -205,14 +205,14 @@ module.exports = {
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(60);
-      } else if (this.crashNumber > 3.7 && this.speed.logic === 60) {
+      } else if (this.crashNumber > 3.1 && this.speed.logic === 60) {
         // this.speed.use = "0.06";
         this.fakeGameWin();
         this.speed.logic = 40;
         clearInterval(this.streamCrash);
         this.broadcastCrash();
         this.streamCrashF(40);
-      } else if (this.crashNumber > 5.7 && this.speed.logic === 40) {
+      } else if (this.crashNumber > 4.5 && this.speed.logic === 40) {
         // this.speed.use = "0.07";
         this.fakeGameWin();
         this.speed.logic = 20;
@@ -302,7 +302,7 @@ module.exports = {
     const random = Math.round(
       (Math.random() * (fakeGame.gameData.length - 1)) / 3
     );
-    let counter = 0;
+    let counter = 2000;
     for (let index = 0; index < random; index++) {
       const random = Math.round(Math.random() * (fakeGame.gameData.length - 1));
       Math.round(Math.random() * (fakeGame.gameData.length - 1));
