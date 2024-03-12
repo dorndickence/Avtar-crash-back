@@ -254,10 +254,11 @@ module.exports = {
       if (timer >= 11) {
         clearInterval(this.streamTimer);
         this.betTime = false;
-        this.streamCrashF();
+
         this.timer = -1;
         this.crashNumber = new Decimal("1.00");
         this.thisRound.crashed = false;
+        this.streamCrashF();
       }
     }, 600);
   },
