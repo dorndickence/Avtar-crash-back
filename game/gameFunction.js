@@ -180,6 +180,7 @@ module.exports = {
     } else {
       if (this.speed.logic === 1) {
         // this.speed.use = "0.02";
+        this.fakeGameWin();
         this.speed.logic = 120;
 
         this.broadcastCrash();
@@ -299,7 +300,7 @@ module.exports = {
   },
   fakeGameWin: async function () {
     const random = Math.round(
-      (Math.random() * (fakeGame.gameData.length - 1)) / 4
+      (Math.random() * (fakeGame.gameData.length - 1)) / 3
     );
     let counter = 0;
     for (let index = 0; index < random; index++) {
