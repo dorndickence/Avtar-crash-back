@@ -174,7 +174,7 @@ module.exports = {
       this.thisRound.hash = this.encrypt(this.thisRound.crash);
 
       // io.emit("crashed", encrypt({ crashed: thisRound.crashed }));
-
+      this.generateRandomCrash();
       this.streamTimerF();
     } else {
       if (this.speed.logic === 1) {
@@ -258,7 +258,6 @@ module.exports = {
         this.streamCrashF();
         this.timer = -1;
         this.crashNumber = new Decimal("1.00");
-        this.generateRandomCrash();
       }
     }, 600);
   },
