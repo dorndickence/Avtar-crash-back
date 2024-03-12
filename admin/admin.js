@@ -137,7 +137,7 @@ module.exports = {
     try {
       const admin = await this.authAdmin(req);
       if (admin) {
-        if (game.thisRound.crashed) {
+        if (!game.thisRound.crashed) {
           throw "Waiting for game";
         }
         res.status(200).send({
