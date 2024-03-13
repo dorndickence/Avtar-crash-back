@@ -121,8 +121,19 @@ module.exports = {
       if (admin) {
         const getVerify = await verifyPayout.find({ status: "unverified" });
 
+        const users = await user.find({});
+        totalUsers = users.length;
+
+        const withdrawAll = await withdraw.find({ status: "In Progress" });
+        const withdrawAllPartner = await partnerWithdraw.find({
+          status: "In Progress",
+        });
+        const pendingWithraw = withdrawAll.length + withdrawAllPartner.length;
+
         res.status(200).send({
           message: "Admin dashbaord data",
+          users: totalUsers,
+          pendingWithraw: pendingWithraw,
           data: getVerify,
         });
       }

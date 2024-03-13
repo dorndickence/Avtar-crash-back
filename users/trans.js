@@ -156,9 +156,7 @@ module.exports = {
       return;
     }
 
-    const balance = getUser[0].balance[coin];
-
-    if (balance === undefined) {
+    if (!getUser[0].balance[coin]) {
       res.status(409).send({
         message: `Withdraw is allowed at the same method used to deposit.`,
         success: false,
@@ -166,6 +164,9 @@ module.exports = {
       });
       return;
     }
+
+    const balance = getUser[0].balance[coin];
+
     if (balance < amount) {
       res.status(409).send({
         message: `You do not have enough funds in your desired wallet.`,
