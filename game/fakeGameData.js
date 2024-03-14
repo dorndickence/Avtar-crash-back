@@ -2754,7 +2754,7 @@ module.exports = {
   },
   gameData: [],
   currency: function () {
-    const currency = ["usdttrc20", "sol", "dai", "trx"];
+    const currency = ["usdttrc20", "usdttrc20", "sol", "dai", "trx", "bdt"];
     let random = Math.round(Math.random() * currency.length);
     if (random >= currency.length) {
       random = random - 1;
