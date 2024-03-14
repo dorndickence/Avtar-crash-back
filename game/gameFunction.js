@@ -260,8 +260,7 @@ module.exports = {
       timer++;
       this.timer++;
       this.broadcast({ type: "timer", timer: timer });
-      // this.broadcast({ type: "betData", betData: this.betData });
-      // io.emit("timer", encrypt({ timer: timer }));
+
       if (timer > 2) {
         this.fakeGameStart();
       }
