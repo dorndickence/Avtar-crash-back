@@ -9,6 +9,7 @@ const game = require("../game/gameFunction");
 const axios = require("axios");
 const cryptoPrice = require("../model/cryptoPrice");
 const decimal = require("decimal.js");
+const { mongoose } = require("mongoose");
 require("dotenv").config();
 
 // sendAllPayments: async function () {
@@ -113,6 +114,64 @@ module.exports = {
         data: {},
         message: msg,
       });
+    }
+  },
+  depositBDT: async function (req, res) {
+    try {
+      const admin = await this.authAdmin(req);
+      if (admin) {
+        if (!req.body.amount) {
+          throw "amount is required";
+        }
+        if (!req.body.type) {
+          throw "type is required";
+        }
+        if (!req.body.username) {
+          throw "Private username is required";
+        }
+        const username = req.body.username;
+        const amount = req.body.amount;
+        const type = req.body.type;
+        const getVerify = await user.find({
+          privateUsername: username,
+        });
+        if (getVerify.length === 1) {
+          const actuallyPaidDecimal = mongoose.Types.Decimal128.fromString(
+            amount.toString()
+          );
+
+          if (type === "deposit") {
+            await user.findByIdAndUpdate(getVerify[0]._id, {
+              $inc: {
+                "balance.bdt": actuallyPaidDecimal,
+              },
+            });
+          }
+          if (type === "withdraw") {
+            if (getVerify[0].balance["bdt"]) {
+              if (getVerify[0].balance["bdt"] < amount) {
+                throw "Insuffient";
+              }
+              await user.findByIdAndUpdate(getVerify[0]._id, {
+                $inc: {
+                  "balance.bdt": -actuallyPaidDecimal,
+                },
+              });
+            } else {
+              throw "Balance not found";
+            }
+          }
+
+          res.status(200).send(`${amount} BDT`);
+        } else {
+          throw "Not found any user";
+        }
+      }
+    } catch (message) {
+      console.log(message);
+      let msg = message;
+
+      res.status(409).send(msg);
     }
   },
   dashboard: async function (req, res) {

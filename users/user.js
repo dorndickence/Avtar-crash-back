@@ -453,6 +453,7 @@ module.exports = {
         success: true,
       });
     } catch (error) {
+      console.log(error);
       res.status(422).send({
         message: "Internal server error",
         success: false,
@@ -623,7 +624,6 @@ module.exports = {
         success: true,
       });
     } catch (error) {
-      console.log(error);
       res.status(422).send({
         message: "Internal server error",
         success: false,
