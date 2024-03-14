@@ -34,8 +34,10 @@ module.exports = {
       });
 
       let timeout = 0;
-      timeout = game.timer * 600;
-      timeout = 6600 - timeout;
+      if (game.betTime) {
+        timeout = game.timer * 600;
+        timeout = 6600 - timeout;
+      }
 
       res.status(200).send({
         data: {
