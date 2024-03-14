@@ -390,8 +390,17 @@ module.exports = {
       });
 
       if (partnerId !== undefined && partnerId !== null) {
+        let partnerCurrency = currency;
+        let partnerAmount = amount;
+
+        if (currency === "bdt") {
+          partnerCurrency = "usdttrc20";
+          const bdt = await cryptoPrice.find({ name: "bdt" });
+          partnerAmount = amount * bdt[0].value;
+        }
+
         const partnerCommisssion = parseFloat(
-          (amount / 100) * process.env.PARTNER_PERCENT
+          (partnerAmount / 100) * process.env.PARTNER_PERCENT
         );
 
         const actuallyPaidDecimal2 = mongoose.Types.Decimal128.fromString(
@@ -400,7 +409,7 @@ module.exports = {
 
         await partner.findByIdAndUpdate(partnerId, {
           $inc: {
-            [`balance.${currency}`]: actuallyPaidDecimal2,
+            [`balance.${partnerCurrency}`]: actuallyPaidDecimal2,
           },
         });
       }
@@ -586,15 +595,24 @@ module.exports = {
       );
 
       if (partnerId !== undefined && partnerId !== null) {
+        let partnerCurrency = currency;
+        let partnerAmount = winAmount;
+
+        if (currency === "bdt") {
+          partnerCurrency = "usdttrc20";
+          const bdt = await cryptoPrice.find({ name: "bdt" });
+          partnerAmount = winAmount * bdt[0].value;
+        }
+
         const partnerCommisssion =
-          (winAmount / 100) * process.env.PARTNER_PERCENT;
+          (partnerAmount / 100) * process.env.PARTNER_PERCENT;
         const actuallyPaidDecimal2 = mongoose.Types.Decimal128.fromString(
           partnerCommisssion.toString()
         );
 
         await partner.findByIdAndUpdate(partnerId, {
           $inc: {
-            [`balance.${currency}`]: -actuallyPaidDecimal2,
+            [`balance.${partnerCurrency}`]: -actuallyPaidDecimal2,
           },
         });
       }
