@@ -39,7 +39,7 @@ async function connect() {
       console.log("connected mongo");
       // cron.partnerWithdraw();
       // cron.withdraw();
-      cron.cryptoPrice();
+      // cron.cryptoPrice();
       // cron.deposit();
     }
   } catch (error) {
