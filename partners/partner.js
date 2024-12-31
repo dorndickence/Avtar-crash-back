@@ -239,7 +239,7 @@ module.exports = {
       maxBodyLength: Infinity,
       url: `https://api.nowpayments.io/v1/payout-withdrawal/min-amount/${coin}`,
       headers: {
-        "x-api-key": "SX7W75F-J76MBF5-PDY3E6P-NRWCNKJ",
+        "x-api-key": "JTD20JB-ZSE4A2Z-KD0YBXS-57F51BE",
       },
     };
 
