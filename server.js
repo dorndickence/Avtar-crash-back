@@ -32,7 +32,7 @@ const io = new WebSocket.Server({ server });
 async function connect() {
   try {
     const connected = await mongoose.connect(
-      "Is this right format “mongodb+srv://dornavan:dornavan444900@cluster0.asgzo.mongodb.net/?retryWrites=true&w=majority
+   "mongodb+srv://dornavan:dornavan444900@cluster0.asgzo.mongodb.net/?retryWrites=true&w=majority"
     );
     if (connected) {
       game.streamCrashF();
