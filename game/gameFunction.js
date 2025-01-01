@@ -282,7 +282,7 @@ module.exports = {
       const currency = fakeGame.currency();
       const amount = fakeGame.randomAmount(currency);
       const oneCryptoInUSD = await cryptoPrice.find({ name: currency });
-      const amountInUSD = parseFloat(oneCryptoInUSD[0].value) * amount;
+      const amountInUSD = oneCryptoInUSD[0]?.value ? parseFloat(oneCryptoInUSD[0].value) * amount : 0; // Default to 0 if data is missing
       const sendDataGlobal = {
         amount: amount,
         amountInUSD: amountInUSD.toFixed(2),
